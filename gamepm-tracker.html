@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GamePM Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Pretendard:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F8F7F4;--bg2:#F1EFE8;--bg3:#FFFFFF;
+  --border:#E0DDD6;--border2:#C8C5BC;
+  --text:#1A1A18;--text2:#6B6A65;--text3:#9B9A96;
+  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --green:#1D9E75;--green-bg:#EAF3DE;--green-text:#27500A;
+  --red:#E24B4A;--red-bg:#FCEBEB;--red-text:#791F1F;
+  --amber:#EF9F27;--amber-bg:#FAEEDA;--amber-text:#633806;
+  --purple:#7F77DD;--purple-bg:#EEEDFE;--purple-text:#3C3489;
+  --coral:#D85A30;--coral-bg:#FAECE7;--coral-text:#712B13;
+  --pink:#D4537E;--pink-bg:#FBEAF0;--pink-text:#72243E;
+  --gray:#888780;--gray-bg:#F1EFE8;--gray-text:#444441;
+}
+body{font-family:'Pretendard',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--bg3);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.t-brand{display:flex;align-items:center;gap:10px;}
+.t-logo{font-size:14px;font-weight:600;letter-spacing:-.2px;}
+.t-live{font-size:11px;padding:2px 9px;border-radius:999px;background:var(--green-bg);color:var(--green-text);font-weight:500;display:flex;align-items:center;gap:4px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.t-right{display:flex;gap:8px;align-items:center;}
+.tab-btn{font-size:12px;padding:5px 14px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s;}
+.tab-btn:hover{background:var(--bg2);}
+.tab-btn.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.btn-new{font-size:12px;font-weight:500;padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;transition:background .15s;}
+.btn-new:hover{background:var(--blue-text);}
+
+/* layout */
+.body{display:flex;flex:1;}
+
+/* sidebar */
+.sidebar{width:210px;min-width:210px;border-right:1px solid var(--border);background:var(--bg2);padding:8px 0;overflow-y:auto;height:calc(100vh - 45px);position:sticky;top:45px;}
+.sg-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);font-weight:500;padding:10px 14px 4px;}
+.rel-item{padding:5px 14px;cursor:pointer;border-left:2px solid transparent;transition:background .1s;}
+.rel-item:hover{background:var(--bg3);}
+.rel-item.on{background:var(--bg3);border-left-color:var(--blue);}
+.rel-header{display:flex;align-items:center;justify-content:space-between;font-size:12px;}
+.rel-arrow{font-size:9px;color:var(--text3);transition:transform .15s;cursor:pointer;padding:2px 4px;line-height:1;}
+.rel-arrow.open{transform:rotate(90deg);}
+.rel-children{display:none;}
+.rel-children.open{display:block;}
+.build-item{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 4px 28px;cursor:pointer;border-left:2px solid transparent;font-size:11px;color:var(--text2);transition:background .1s;}
+.build-item:hover{background:var(--bg3);}
+.build-item.on{background:var(--bg3);border-left-color:var(--blue);color:var(--blue);font-weight:500;}
+.b-left{display:flex;align-items:center;gap:5px;}
+.sc{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--border);color:var(--text2);}
+.sg-divider{height:1px;background:var(--border);margin:8px 14px;}
+.si{display:flex;align-items:center;justify-content:space-between;padding:5px 14px;font-size:12px;color:var(--text2);cursor:pointer;border-left:2px solid transparent;transition:background .1s;}
+.si:hover{background:var(--bg3);}
+.si.on{background:var(--bg3);color:var(--blue);border-left-color:var(--blue);font-weight:500;}
+.si-l{display:flex;align-items:center;gap:6px;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.wl-row{padding:3px 14px 4px;}
+.wl-name{font-size:11px;color:var(--text2);display:flex;justify-content:space-between;margin-bottom:3px;}
+.wl-bar{height:3px;border-radius:2px;background:var(--border);}
+.wl-fill{height:100%;border-radius:2px;transition:width .3s;}
+
+/* main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.fbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.fl{font-size:11px;color:var(--text3);}
+.fchip{font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .1s;}
+.fchip:hover{background:var(--bg2);}
+.fchip.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.fsep{width:1px;height:16px;background:var(--border);}
+.fsel{font-size:11px;padding:4px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg3);color:var(--text);cursor:pointer;font-family:inherit;}
+
+.legend{display:flex;align-items:center;gap:14px;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--bg2);font-size:10px;color:var(--text3);}
+.leg-item{display:flex;align-items:center;gap:4px;}
+.leg-dot{width:7px;height:7px;border-radius:50%;}
+
+.rel-banner{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--bg2);font-size:11px;flex-wrap:wrap;}
+.rb-ver{font-weight:600;font-size:13px;}
+.rb-desc{color:var(--text2);}
+.rb-tag{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:500;}
+.rb-bar{flex:1;min-width:80px;height:3px;background:var(--border);border-radius:2px;}
+.rb-fill{height:100%;background:var(--green);border-radius:2px;transition:width .3s;}
+.rb-pct{font-weight:500;color:var(--green);font-size:12px;}
+
+.stats{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--border);background:var(--bg3);}
+.st-cell{padding:8px 0;text-align:center;border-right:1px solid var(--border);}
+.st-cell:last-child{border-right:none;}
+.st-n{font-size:18px;font-weight:600;}
+.st-l{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+
+/* list */
+.list-wrap{flex:1;overflow-y:auto;}
+.row{display:grid;grid-template-columns:22px 62px 1fr 54px 64px 56px 110px 68px;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid var(--border);background:var(--bg3);cursor:pointer;font-size:11px;transition:background .1s;}
+.row:hover{background:var(--bg2);}
+.hdr{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;background:var(--bg2);cursor:default;position:sticky;top:0;z-index:2;}
+.itc{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.idc{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);}
+.badge{font-size:10px;padding:2px 7px;border-radius:999px;font-weight:500;white-space:nowrap;display:inline-block;}
+.s-new{background:var(--blue-bg);color:var(--blue-text);}
+.s-prog{background:var(--green-bg);color:var(--green-text);}
+.s-qawait{background:var(--amber-bg);color:var(--amber-text);}
+.s-qa{background:var(--pink-bg);color:var(--pink-text);}
+.s-fix{background:var(--coral-bg);color:var(--coral-text);}
+.s-done{background:var(--gray-bg);color:var(--gray-text);}
+.part-아트{background:var(--purple-bg);color:var(--purple-text);}
+.part-기획{background:var(--green-bg);color:var(--green-text);}
+.part-프로그램{background:var(--coral-bg);color:var(--coral-text);}
+.part-QA팀{background:var(--pink-bg);color:var(--pink-text);}
+.part-사운드{background:var(--amber-bg);color:var(--amber-text);}
+.pf-pc{background:var(--blue-bg);color:var(--blue-text);}
+.pf-mob{background:var(--green-bg);color:var(--green-text);}
+.pf-both{background:var(--gray-bg);color:var(--gray-text);}
+.pd{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.p-crit{background:var(--red);}
+.p-high{background:var(--amber);}
+.p-norm{background:var(--blue);}
+.p-low{background:var(--gray);}
+.overdue{color:var(--red)!important;font-weight:500;}
+.type-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;}
+.build-col{display:flex;flex-direction:column;gap:2px;}
+.build-ver{font-weight:500;font-size:11px;}
+.build-name{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3);}
+
+/* kanban */
+.kanban{flex:1;overflow-x:auto;display:flex;gap:10px;padding:14px;}
+.kol{min-width:190px;max-width:190px;display:flex;flex-direction:column;gap:6px;}
+.kol-hdr{font-size:11px;font-weight:500;padding:7px 10px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;}
+.kcount{font-size:10px;font-weight:500;padding:1px 7px;border-radius:999px;}
+.kcard{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:border-color .15s,box-shadow .15s;}
+.kcard:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.kcard-title{font-size:12px;color:var(--text);line-height:1.4;}
+.kcard-meta{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.kcard-foot{display:flex;align-items:center;justify-content:space-between;}
+.kcard-sub{font-size:10px;color:var(--text3);}
+
+/* modal */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-start;justify-content:center;padding-top:48px;}
+.mbg.open{display:flex;}
+.modal{background:var(--bg3);border-radius:12px;border:1px solid var(--border);width:520px;max-width:96vw;padding:22px;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.12);}
+.mhdr{font-size:15px;font-weight:600;}
+.frow{display:flex;flex-direction:column;gap:4px;}
+.flabel{font-size:11px;color:var(--text2);}
+.finput,.fsel2{font-size:12px;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg3);color:var(--text);font-family:inherit;width:100%;transition:border-color .15s;}
+.finput:focus,.fsel2:focus{outline:none;border-color:var(--blue);}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:4px;}
+.btn-cancel{font-size:12px;padding:6px 16px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;}
+.btn-sub{font-size:12px;font-weight:500;padding:6px 16px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;}
+.btn-sub:hover{background:var(--blue-text);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="t-brand">
+    <span class="t-logo">GamePM Tracker</span>
+    <span class="t-live"><span class="live-dot"></span>LIVE</span>
+  </div>
+  <div class="t-right">
+    <button class="tab-btn on" id="tab-list" onclick="setView('list')">리스트</button>
+    <button class="tab-btn" id="tab-kanban" onclick="setView('kanban')">칸반</button>
+    <button class="btn-new" onclick="openModal()">+ 새 이슈</button>
+  </div>
+</div>
+
+<div class="body">
+<div class="sidebar">
+  <div class="sg-label">릴리즈 / 빌드</div>
+  <div class="rel-item on" id="ri-all" onclick="setRelBuild('','',this)">
+    <div class="rel-header" style="color:var(--text);font-weight:500;">전체</div>
+  </div>
+  <div id="rel-tree"></div>
+
+  <div class="sg-divider"></div>
+  <div class="sg-label">파트</div>
+  <div class="si on" onclick="setPart('',this)"><div class="si-l">전체 파트</div></div>
+  <div class="si" onclick="setPart('기획',this)"><div class="si-l"><span class="dot" style="background:var(--green)"></span>기획</div></div>
+  <div class="si" onclick="setPart('아트',this)"><div class="si-l"><span class="dot" style="background:var(--purple)"></span>아트</div></div>
+  <div class="si" onclick="setPart('프로그램',this)"><div class="si-l"><span class="dot" style="background:var(--coral)"></span>프로그램</div></div>
+  <div class="si" onclick="setPart('QA팀',this)"><div class="si-l"><span class="dot" style="background:var(--pink)"></span>QA팀</div></div>
+  <div class="si" onclick="setPart('사운드',this)"><div class="si-l"><span class="dot" style="background:var(--amber)"></span>사운드</div></div>
+
+  <div class="sg-divider"></div>
+  <div class="sg-label">담당자 워크로드</div>
+  <div id="workload"></div>
+</div>
+
+<div class="main">
+  <div class="fbar">
+    <span class="fl">상태</span>
+    <span class="fchip on" id="st-all" onclick="setSt('',this)">전체</span>
+    <span class="fchip" id="st-신규" onclick="setSt('신규',this)">신규</span>
+    <span class="fchip" id="st-진행" onclick="setSt('진행중',this)">진행중</span>
+    <span class="fchip" id="st-qa" onclick="setSt('QA중',this)">QA중</span>
+    <span class="fchip" id="st-fix" onclick="setSt('수정중',this)">수정중</span>
+    <span class="fchip" id="st-done" onclick="setSt('완료',this)">완료</span>
+    <div class="fsep"></div>
+    <span class="fl">플랫폼</span>
+    <span class="fchip on" id="pf-all" onclick="setPf('',this)">전체</span>
+    <span class="fchip" id="pf-pc" onclick="setPf('PC',this)">PC</span>
+    <span class="fchip" id="pf-mob" onclick="setPf('Mobile',this)">Mobile</span>
+    <div class="fsep"></div>
+    <span class="fchip on" id="d-all" onclick="setDate('all',this)">전체기간</span>
+    <span class="fchip" id="d-over" onclick="setDate('over',this)">기한초과</span>
+    <div class="fsep"></div>
+    <select class="fsel" id="sortSel" onchange="render()">
+      <option value="id">ID순</option>
+      <option value="prio">우선순위순</option>
+      <option value="due">마감일순</option>
+    </select>
+  </div>
+
+  <div class="legend">
+    <span style="font-weight:500;color:var(--text2)">빌드 유형</span>
+    <span class="leg-item"><span class="leg-dot" style="background:var(--green)"></span>정기업데이트</span>
+    <span class="leg-item"><span class="leg-dot" style="background:var(--amber)"></span>긴급패치</span>
+    <span class="leg-item"><span class="leg-dot" style="background:var(--red)"></span>핫픽스</span>
+  </div>
+
+  <div class="rel-banner">
+    <span class="rb-ver" id="rb-ver">전체 릴리즈</span>
+    <span class="rb-desc" id="rb-desc"></span>
+    <span class="rb-tag" id="rb-tag" style="display:none"></span>
+    <div class="rb-bar"><div class="rb-fill" id="rb-fill" style="width:0%"></div></div>
+    <span class="rb-pct" id="rb-pct">0%</span>
+  </div>
+
+  <div class="stats">
+    <div class="st-cell"><div class="st-n" id="s0">0</div><div class="st-l">전체</div></div>
+    <div class="st-cell"><div class="st-n" style="color:var(--green)" id="s1">0</div><div class="st-l">진행중</div></div>
+    <div class="st-cell"><div class="st-n" style="color:var(--pink)" id="s2">0</div><div class="st-l">QA중</div></div>
+    <div class="st-cell"><div class="st-n" style="color:var(--coral)" id="s3">0</div><div class="st-l">수정중</div></div>
+    <div class="st-cell"><div class="st-n" style="color:var(--red)" id="s4">0</div><div class="st-l">기한초과</div></div>
+    <div class="st-cell"><div class="st-n" style="color:var(--gray)" id="s5">0</div><div class="st-l">완료</div></div>
+  </div>
+
+  <div id="viewArea" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"></div>
+</div>
+</div>
+
+<div class="mbg" id="modalBg">
+<div class="modal">
+  <div class="mhdr">새 이슈 등록</div>
+  <div class="frow"><div class="flabel">제목</div><input class="finput" id="nTitle" placeholder="이슈를 간략히 입력하세요"></div>
+  <div class="f3">
+    <div class="frow"><div class="flabel">릴리즈</div><select class="fsel2" id="nRel" onchange="updateBuildOpts()"></select></div>
+    <div class="frow"><div class="flabel">빌드</div><select class="fsel2" id="nBuild"></select></div>
+    <div class="frow"><div class="flabel">빌드 유형</div>
+      <select class="fsel2" id="nType"><option>정기업데이트</option><option>긴급패치</option><option>핫픽스</option></select>
+    </div>
+  </div>
+  <div class="f3">
+    <div class="frow"><div class="flabel">상태</div>
+      <select class="fsel2" id="nStatus"><option>신규</option><option>진행중</option><option>QA대기</option><option>QA중</option><option>수정중</option><option>완료</option></select>
+    </div>
+    <div class="frow"><div class="flabel">우선순위</div>
+      <select class="fsel2" id="nPrio"><option>Normal</option><option>High</option><option>Critical</option><option>Low</option></select>
+    </div>
+    <div class="frow"><div class="flabel">플랫폼</div>
+      <select class="fsel2" id="nPf"><option>공통</option><option>PC</option><option>Mobile</option></select>
+    </div>
+  </div>
+  <div class="f3">
+    <div class="frow"><div class="flabel">담당 파트</div>
+      <select class="fsel2" id="nPart"><option>기획</option><option>아트</option><option>프로그램</option><option>QA팀</option><option>사운드</option></select>
+    </div>
+    <div class="frow"><div class="flabel">담당자</div>
+      <select class="fsel2" id="nAssignee"><option>김민준</option><option>이서연</option><option>박준혁</option><option>최유진</option><option>정하은</option><option>오세찬</option></select>
+    </div>
+    <div class="frow"><div class="flabel">마감일</div><input class="finput" id="nDue" type="date"></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn-cancel" onclick="closeModal()">취소</button>
+    <button class="btn-sub" onclick="submitIssue()">등록</button>
+  </div>
+</div>
+</div>
+
+<script>
+const TODAY = new Date('2025-07-03');
+const PRIO_ORD = {Critical:0,High:1,Normal:2,Low:3};
+const ST_CYCLE = ['신규','진행중','QA대기','QA중','수정중','완료'];
+const ST_CLS = {신규:'s-new',진행중:'s-prog','QA대기':'s-qawait','QA중':'s-qa',수정중:'s-fix',완료:'s-done'};
+const PART_CLS = {아트:'part-아트',기획:'part-기획',프로그램:'part-프로그램','QA팀':'part-QA팀',사운드:'part-사운드'};
+const PF_CLS = {PC:'pf-pc',Mobile:'pf-mob',공통:'pf-both'};
+const TYPE_COLOR = {'정기업데이트':'#1D9E75','긴급패치':'#EF9F27','핫픽스':'#E24B4A'};
+const KOL_COLORS = {
+  신규:{bg:'#E6F1FB',tc:'#0C447C',cc:'#B5D4F4'},
+  진행중:{bg:'#EAF3DE',tc:'#27500A',cc:'#C0DD97'},
+  'QA대기':{bg:'#FAEEDA',tc:'#633806',cc:'#FAC775'},
+  'QA중':{bg:'#FBEAF0',tc:'#72243E',cc:'#F4C0D1'},
+  수정중:{bg:'#FAECE7',tc:'#712B13',cc:'#F5C4B3'},
+  완료:{bg:'#F1EFE8',tc:'#444441',cc:'#D3D1C7'},
+};
+
+const RELEASES = [
+  {ver:'v1.0',name:'정식 출시',color:'#534AB7',builds:[{name:'1차 빌드',type:'정기업데이트'},{name:'2차 빌드',type:'정기업데이트'},{name:'3차 빌드',type:'핫픽스'}]},
+  {ver:'v1.1',name:'시즌 1 업데이트',color:'#1D9E75',builds:[{name:'1차 빌드',type:'정기업데이트'},{name:'2차 빌드',type:'긴급패치'}]},
+  {ver:'v1.2',name:'밸런스 패치',color:'#378ADD',builds:[{name:'1차 빌드',type:'정기업데이트'}]},
+  {ver:'v1.3',name:'콜라보 이벤트',color:'#D85A30',builds:[{name:'1차 빌드',type:'정기업데이트'}]},
+];
+const REL_MAP = {};
+RELEASES.forEach(r=>REL_MAP[r.ver]=r);
+
+let issues = [
+  {id:'NOV-041',title:'보스 3페이즈 충돌 판정 오류',status:'수정중',prio:'Critical',part:'프로그램',assignee:'박준혁',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'PC',due:'2025-06-30'},
+  {id:'NOV-040',title:'스킬 UI 쿨타임 표시 깨짐 (iPad)',status:'QA중',prio:'High',part:'아트',assignee:'이서연',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'Mobile',due:'2025-07-05'},
+  {id:'NOV-039',title:'서버 매칭 응답 지연 >5초',status:'진행중',prio:'Critical',part:'프로그램',assignee:'정하은',rel:'v1.2',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-02'},
+  {id:'NOV-038',title:'기본 공격 데미지 재밸런싱',status:'완료',prio:'Normal',part:'기획',assignee:'김민준',rel:'v1.2',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-06-28'},
+  {id:'NOV-037',title:'인벤토리 드래그 앤 드롭 구현',status:'진행중',prio:'Normal',part:'프로그램',assignee:'이서연',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'PC',due:'2025-07-07'},
+  {id:'NOV-036',title:'BGM 루프 끊김 (던전 1-3)',status:'QA대기',prio:'High',part:'사운드',assignee:'최유진',rel:'v1.1',build:'2차 빌드',type:'긴급패치',pf:'공통',due:'2025-07-04'},
+  {id:'NOV-035',title:'로딩 화면 에셋 최적화',status:'완료',prio:'Low',part:'아트',assignee:'오세찬',rel:'v1.0',build:'3차 빌드',type:'핫픽스',pf:'공통',due:'2025-06-25'},
+  {id:'NOV-034',title:'신규 NPC 대화 누락',status:'신규',prio:'High',part:'기획',assignee:'박준혁',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-06'},
+  {id:'NOV-033',title:'파티 초대 알림 미수신 (Android 14)',status:'진행중',prio:'High',part:'프로그램',assignee:'정하은',rel:'v1.1',build:'2차 빌드',type:'긴급패치',pf:'Mobile',due:'2025-07-05'},
+  {id:'NOV-032',title:'콜라보 신규 스킨 이펙트 아트',status:'신규',prio:'Normal',part:'아트',assignee:'오세찬',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-08'},
+  {id:'NOV-031',title:'시즌1 캐릭터 선택 UI 개편',status:'진행중',prio:'Normal',part:'기획',assignee:'김민준',rel:'v1.1',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-07'},
+  {id:'NOV-030',title:'QA 테스트 케이스 문서화',status:'QA대기',prio:'Low',part:'QA팀',assignee:'최유진',rel:'v1.0',build:'2차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-10'},
+  {id:'NOV-029',title:'튜토리얼 플로우 재설계',status:'수정중',prio:'High',part:'기획',assignee:'김민준',rel:'v1.0',build:'3차 빌드',type:'핫픽스',pf:'공통',due:'2025-07-01'},
+  {id:'NOV-028',title:'모바일 터치 반응속도 개선',status:'QA중',prio:'High',part:'프로그램',assignee:'박준혁',rel:'v1.1',build:'1차 빌드',type:'정기업데이트',pf:'Mobile',due:'2025-07-03'},
+  {id:'NOV-027',title:'정식출시 아이템 드롭률 밸런스',status:'완료',prio:'Normal',part:'기획',assignee:'김민준',rel:'v1.0',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-06-20'},
+];
+
+let nextNum=26, fRel='', fBuild='', fSt='', fPart='', fPf='', fDate='all', curView='list';
+
+function isOverdue(i){return i.due&&new Date(i.due)<TODAY&&i.status!=='완료';}
+
+function buildRelTree(){
+  let html='';
+  RELEASES.forEach(r=>{
+    const cnt=issues.filter(i=>i.rel===r.ver).length;
+    html+=`<div class="rel-item" id="ri-${r.ver}" onclick="setRelBuild('${r.ver}','',this)">
+      <div class="rel-header">
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span class="dot" style="background:${r.color}"></span>
+          <span style="color:${r.color};font-weight:600">${r.ver}</span>
+          <span style="font-size:11px;font-weight:400;color:var(--text2)">${r.name}</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:3px;">
+          <span class="sc">${cnt}</span>
+          <span class="rel-arrow" id="arr-${r.ver}" onclick="toggleRel(event,'${r.ver}')">▶</span>
+        </span>
+      </div>
+    </div>
+    <div class="rel-children" id="ch-${r.ver}">
+      ${r.builds.map((b,idx)=>{
+        const bc=issues.filter(i=>i.rel===r.ver&&i.build===b.name).length;
+        const tc=TYPE_COLOR[b.type]||'#888';
+        return `<div class="build-item" id="bi-${r.ver}-${idx}" onclick="setRelBuild('${r.ver}','${b.name}',this)">
+          <div class="b-left"><span class="type-dot" style="background:${tc}"></span>${b.name}</div>
+          <span class="sc">${bc}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+  document.getElementById('rel-tree').innerHTML=html;
+}
+
+function toggleRel(e,ver){
+  e.stopPropagation();
+  document.getElementById('ch-'+ver).classList.toggle('open');
+  document.getElementById('arr-'+ver).classList.toggle('open');
+}
+function setRelBuild(rel,build,el){
+  fRel=rel;fBuild=build;
+  document.querySelectorAll('.rel-item,.build-item').forEach(e=>e.classList.remove('on'));
+  document.getElementById('ri-all').classList.remove('on');
+  if(el) el.classList.add('on');
+  updateBanner();render();
+}
+function updateBanner(){
+  const vEl=document.getElementById('rb-ver'),dEl=document.getElementById('rb-desc'),tEl=document.getElementById('rb-tag');
+  if(!fRel){vEl.textContent='전체 릴리즈';vEl.style.color='var(--text)';dEl.textContent='';tEl.style.display='none';return;}
+  const r=REL_MAP[fRel];
+  vEl.textContent=r.ver;vEl.style.color=r.color;dEl.textContent=r.name;
+  if(fBuild){
+    const b=r.builds.find(x=>x.name===fBuild);
+    const t=b?b.type:'정기업데이트';const tc=TYPE_COLOR[t];
+    tEl.textContent=t;tEl.style.display='inline';
+    tEl.style.background=tc+'22';tEl.style.color=tc;tEl.style.border='.5px solid '+tc+'66';
+  } else {tEl.style.display='none';}
+}
+function filtered(){
+  const sort=document.getElementById('sortSel').value;
+  let d=issues.filter(i=>{
+    if(fRel&&i.rel!==fRel)return false;
+    if(fBuild&&i.build!==fBuild)return false;
+    if(fSt&&i.status!==fSt)return false;
+    if(fPart&&i.part!==fPart)return false;
+    if(fPf&&i.pf!==fPf)return false;
+    if(fDate==='over'&&!isOverdue(i))return false;
+    return true;
+  });
+  if(sort==='prio')d.sort((a,b)=>PRIO_ORD[a.prio]-PRIO_ORD[b.prio]);
+  else if(sort==='due')d.sort((a,b)=>(a.due||'9999')>(b.due||'9999')?1:-1);
+  else d.sort((a,b)=>b.id.localeCompare(a.id));
+  return d;
+}
+function render(){
+  document.getElementById('s0').textContent=issues.length;
+  document.getElementById('s1').textContent=issues.filter(i=>i.status==='진행중').length;
+  document.getElementById('s2').textContent=issues.filter(i=>i.status==='QA중').length;
+  document.getElementById('s3').textContent=issues.filter(i=>i.status==='수정중').length;
+  document.getElementById('s4').textContent=issues.filter(i=>isOverdue(i)).length;
+  document.getElementById('s5').textContent=issues.filter(i=>i.status==='완료').length;
+  const scope=fRel?issues.filter(i=>i.rel===fRel&&(!fBuild||i.build===fBuild)):issues;
+  const pct=scope.length>0?Math.round(scope.filter(i=>i.status==='완료').length/scope.length*100):0;
+  document.getElementById('rb-fill').style.width=pct+'%';
+  document.getElementById('rb-pct').textContent=pct+'%';
+  const assignees=[...new Set(issues.map(i=>i.assignee))];
+  const maxLoad=Math.max(...assignees.map(a=>issues.filter(i=>i.assignee===a&&i.status!=='완료').length),1);
+  document.getElementById('workload').innerHTML=assignees.map(a=>{
+    const active=issues.filter(i=>i.assignee===a&&i.status!=='완료').length;
+    const hasCrit=issues.some(i=>i.assignee===a&&i.prio==='Critical'&&i.status!=='완료');
+    const pct=Math.round(active/maxLoad*100);
+    const bc=hasCrit?'#E24B4A':active>=3?'#EF9F27':'#1D9E75';
+    return `<div class="wl-row"><div class="wl-name"><span>${a}</span><span style="color:${hasCrit?'#A32D2D':'var(--text3)'}">${active}</span></div><div class="wl-bar"><div class="wl-fill" style="width:${pct}%;background:${bc}"></div></div></div>`;
+  }).join('');
+  buildRelTree();
+  curView==='list'?renderList():renderKanban();
+}
+function prioCls(p){return p==='Critical'?'p-crit':p==='High'?'p-high':p==='Low'?'p-low':'p-norm';}
+function renderList(){
+  const data=filtered();
+  document.getElementById('viewArea').innerHTML=`<div class="list-wrap">
+    <div class="row hdr"><span></span><span>ID</span><span>제목</span><span>파트</span><span>상태</span><span>플랫폼</span><span>릴리즈 · 빌드</span><span>마감일</span></div>
+    ${data.map(i=>{
+      const over=isOverdue(i);const due=i.due?i.due.slice(5).replace('-','/'):'–';
+      const r=REL_MAP[i.rel];const tc=TYPE_COLOR[i.type]||'#888';
+      return `<div class="row" onclick="cycleStatus('${i.id}')">
+        <span><span class="pd ${prioCls(i.prio)}"></span></span>
+        <span class="idc">${i.id}</span>
+        <span class="itc" title="${i.title}">${i.title}</span>
+        <span><span class="badge ${PART_CLS[i.part]||''}">${i.part}</span></span>
+        <span><span class="badge ${ST_CLS[i.status]||''}">${i.status}</span></span>
+        <span><span class="badge ${PF_CLS[i.pf]||''}">${i.pf}</span></span>
+        <span class="build-col">
+          <span class="build-ver" style="color:${r?.color||'#888'}">${i.rel} <span style="font-weight:400;color:var(--text3);font-size:10px">${r?.name||''}</span></span>
+          <span class="build-name"><span class="type-dot" style="background:${tc}"></span>${i.build}</span>
+        </span>
+        <span class="${over?'overdue':''}" style="font-size:11px">${due}${over?' !':''}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+function renderKanban(){
+  document.getElementById('viewArea').innerHTML=`<div class="kanban">
+    ${ST_CYCLE.map(st=>{
+      const cards=issues.filter(i=>i.status===st&&(!fRel||i.rel===fRel)&&(!fBuild||i.build===fBuild)&&(!fPart||i.part===fPart));
+      const c=KOL_COLORS[st];
+      return `<div class="kol">
+        <div class="kol-hdr" style="background:${c.bg};color:${c.tc}"><span>${st}</span><span class="kcount" style="background:${c.cc};color:${c.tc}">${cards.length}</span></div>
+        ${cards.map(i=>{
+          const over=isOverdue(i);const due=i.due?i.due.slice(5).replace('-','/'):'–';
+          const r=REL_MAP[i.rel];const tc=TYPE_COLOR[i.type]||'#888';
+          return `<div class="kcard" onclick="cycleStatus('${i.id}')">
+            <div class="kcard-title">${i.title}</div>
+            <div class="kcard-meta"><span class="badge ${PART_CLS[i.part]||''}">${i.part}</span><span class="pd ${prioCls(i.prio)}" style="margin-left:2px"></span></div>
+            <div class="kcard-foot">
+              <span style="font-size:10px;font-weight:600;color:${r?.color||'#888'}">${i.rel} <span style="font-weight:400;color:var(--text3)">${i.build}</span></span>
+              <span class="type-dot" style="background:${tc}" title="${i.type}"></span>
+            </div>
+            <div class="kcard-foot"><span class="kcard-sub">${i.assignee}</span><span class="kcard-sub ${over?'overdue':''}">${due}${over?' !':''}</span></div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+function cycleStatus(id){
+  const i=issues.find(x=>x.id===id);if(!i)return;
+  i.status=ST_CYCLE[(ST_CYCLE.indexOf(i.status)+1)%ST_CYCLE.length];render();
+}
+function setView(v){curView=v;document.getElementById('tab-list').classList.toggle('on',v==='list');document.getElementById('tab-kanban').classList.toggle('on',v==='kanban');render();}
+function setSt(v,el){fSt=v;['st-all','st-신규','st-진행','st-qa','st-fix','st-done'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('on');});el.classList.add('on');render();}
+function setPart(v,el){fPart=v;document.querySelectorAll('.si').forEach(e=>e.classList.remove('on'));el.classList.add('on');render();}
+function setPf(v,el){fPf=v;['pf-all','pf-pc','pf-mob'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('on');});el.classList.add('on');render();}
+function setDate(v,el){fDate=v;['d-all','d-over'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('on');});el.classList.add('on');render();}
+function updateBuildOpts(){
+  const r=REL_MAP[document.getElementById('nRel').value];
+  document.getElementById('nBuild').innerHTML=(r?.builds||[]).map(b=>`<option>${b.name}</option>`).join('');
+}
+function openModal(){
+  document.getElementById('nRel').innerHTML=RELEASES.map(r=>`<option value="${r.ver}">${r.ver} · ${r.name}</option>`).join('');
+  updateBuildOpts();document.getElementById('nDue').value='2025-07-15';
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('open');}
+function submitIssue(){
+  const title=document.getElementById('nTitle').value.trim();
+  if(!title){alert('제목을 입력해주세요.');return;}
+  const num=String(nextNum--).padStart(3,'0');
+  issues.unshift({id:'NOV-0'+num,title,status:document.getElementById('nStatus').value,prio:document.getElementById('nPrio').value,part:document.getElementById('nPart').value,assignee:document.getElementById('nAssignee').value,rel:document.getElementById('nRel').value,build:document.getElementById('nBuild').value,type:document.getElementById('nType').value,pf:document.getElementById('nPf').value,due:document.getElementById('nDue').value});
+  closeModal();document.getElementById('nTitle').value='';render();
+}
+render();
+</script>
+</body>
+</html>
