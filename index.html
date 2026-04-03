@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GamePM Tracker — Project NOVA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg0:#0F0F0F;--bg1:#161618;--bg2:#1E1E21;--bg3:#252529;--bg4:#2E2E33;
+  --border:#2A2A30;--border2:#3A3A42;
+  --text:#E8E8EA;--text2:#9A9AA8;--text3:#5A5A68;
+  --red:#E24B4A;--red-dim:#1E0D0D;
+  --amber:#EF9F27;--amber-dim:#1E1408;
+  --green:#1D9E75;--green-dim:#0A1A12;
+  --blue:#4A9EE0;--blue-dim:#0D1A26;
+  --purple:#8B7FE8;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var(--text);min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden;font-size:12px;}
+
+/* 긴급바 */
+.alert-bar{display:flex;align-items:center;gap:10px;padding:7px 16px;background:var(--bg0);border-bottom:1px solid var(--border);flex-shrink:0;}
+.a-label{font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;}
+.a-pill{display:flex;align-items:center;gap:5px;padding:3px 11px;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:opacity .15s;}
+.a-pill:hover{opacity:.8;}
+.a-crit{background:var(--red-dim);color:var(--red);border-color:#3A1515;}
+.a-fix{background:var(--amber-dim);color:var(--amber);border-color:#3A2808;}
+.a-sep{width:1px;height:14px;background:var(--border2);}
+.a-over{color:var(--text3);font-size:11px;}
+.a-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.sprint-wrap{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);}
+.sprint-bar{width:72px;height:3px;background:var(--border2);border-radius:2px;}
+.sprint-fill{height:100%;background:var(--green);border-radius:2px;}
+.btn-new{font-size:11px;padding:5px 14px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-new:hover{background:var(--bg3);color:var(--text);}
+
+/* 탭바 */
+.tab-bar{display:flex;align-items:center;background:var(--bg1);border-bottom:1px solid var(--border);padding:0 16px;flex-shrink:0;}
+.vtab{font-size:13px;font-weight:500;padding:11px 18px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.vtab:hover{color:var(--text2);}
+.vtab.on{color:var(--text);border-bottom-color:var(--blue);}
+.tab-sep{flex:1;}
+.tab-right{display:flex;align-items:center;gap:6px;padding:6px 0;}
+.fchip{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;}
+.fchip:hover{color:var(--text2);}
+.fchip.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.fsel{font-size:11px;padding:3px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text2);cursor:pointer;font-family:inherit;}
+
+/* KPI */
+.kpi-bar{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--border);background:var(--bg1);flex-shrink:0;}
+.kpi{padding:8px 0;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.kpi:last-child{border-right:none;}
+.kpi:hover{background:var(--bg2);}
+.kpi-n{font-size:18px;font-weight:600;}
+.kpi-l{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+
+/* 본문 */
+.body{display:flex;flex:1;overflow:hidden;}
+
+/* 사이드바 */
+.sidebar{width:190px;min-width:190px;border-right:1px solid var(--border);background:var(--bg1);overflow-y:auto;flex-shrink:0;}
+.sb-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);font-weight:500;padding:12px 14px 4px;}
+.sb-div{height:1px;background:var(--border);margin:8px 14px;}
+.rel-row{display:flex;align-items:flex-start;gap:7px;padding:6px 14px;cursor:pointer;transition:background .1s;}
+.rel-row:hover{background:var(--bg2);}
+.chk{width:13px;height:13px;border-radius:3px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all .15s;}
+.chk.on{border-color:transparent;}
+.chk.on::after{content:'✓';font-size:9px;color:#fff;font-weight:700;}
+.rel-info{flex:1;min-width:0;}
+.rel-ver{font-size:12px;font-weight:600;}
+.rel-name-s{font-size:10px;color:var(--text3);margin-top:1px;}
+.rel-builds{padding:0 14px 4px 34px;}
+.build-row{display:flex;align-items:center;gap:5px;padding:3px 0;font-size:11px;color:var(--text3);cursor:pointer;transition:color .1s;}
+.build-row:hover{color:var(--text2);}
+.tdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.part-row{display:flex;align-items:center;gap:6px;padding:5px 14px;cursor:pointer;font-size:12px;color:var(--text3);border-left:2px solid transparent;transition:all .1s;}
+.part-row:hover{background:var(--bg2);color:var(--text2);}
+.part-row.on{background:var(--bg2);color:var(--text);border-left-color:var(--blue);}
+.pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.wl-item{padding:4px 14px 5px;}
+.wl-top{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;}
+.wl-bar{height:3px;border-radius:2px;background:var(--border2);}
+.wl-fill{height:100%;border-radius:2px;transition:width .3s;}
+
+/* 메인 */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#viewArea{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* 리스트 */
+.list-wrap{flex:1;overflow-y:auto;}
+.row{display:grid;grid-template-columns:20px 72px 1fr 52px 64px 52px 110px 68px;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid var(--border);background:var(--bg1);cursor:pointer;transition:background .1s;}
+.row:hover{background:var(--bg2);}
+.hdr{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;background:var(--bg0);cursor:default;position:sticky;top:0;z-index:2;}
+.itc{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.idc{font-size:10px;color:var(--blue);font-family:monospace;text-decoration:underline;text-underline-offset:2px;}
+.badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;white-space:nowrap;display:inline-block;border:1px solid transparent;}
+.s-new{background:var(--blue-dim);color:var(--blue);border-color:#1A2E42;}
+.s-prog{background:var(--green-dim);color:var(--green);border-color:#122A1E;}
+.s-qawait{background:var(--amber-dim);color:var(--amber);border-color:#2E2008;}
+.s-qa{background:#1A1228;color:var(--purple);border-color:#2A1A38;}
+.s-fix{background:#1A0E0E;color:#E07070;border-color:#2E1818;}
+.s-done{background:var(--bg3);color:var(--text3);border-color:var(--border2);}
+.badge-dim{background:var(--bg3);color:var(--text2);border-color:var(--border2);}
+.pd{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.p-crit{background:var(--red);}
+.p-high{background:var(--amber);}
+.p-norm{background:var(--blue);}
+.p-low{background:var(--text3);}
+.overdue{color:var(--red)!important;font-weight:500;}
+.build-col{display:flex;flex-direction:column;gap:2px;}
+.bver{font-weight:600;font-size:11px;}
+.bname{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text3);}
+.redmine-link{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--blue);opacity:.7;transition:opacity .15s;}
+.redmine-link:hover{opacity:1;}
+
+/* 칸반 */
+.kanban{flex:1;overflow-x:auto;display:flex;gap:8px;padding:12px;background:var(--bg0);}
+.kol{min-width:178px;display:flex;flex-direction:column;gap:5px;}
+.kol-hdr{font-size:11px;font-weight:500;padding:7px 10px;border-radius:6px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);}
+.kcount{font-size:10px;padding:1px 7px;border-radius:999px;background:var(--bg3);color:var(--text3);}
+.kcard{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px;transition:border-color .15s;}
+.kcard:hover{border-color:var(--border2);}
+.kcard-title{font-size:11px;color:var(--text);line-height:1.45;cursor:pointer;}
+.kcard-meta{display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+.kcard-foot{display:flex;align-items:center;justify-content:space-between;}
+.ksub{font-size:10px;color:var(--text3);}
+
+/* 팀별 */
+.team-view{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--bg0);}
+.team-block{background:var(--bg1);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.team-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg2);}
+.team-title{font-size:13px;font-weight:600;color:var(--text);}
+.team-pills{display:flex;gap:5px;margin-left:auto;}
+.team-pill{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid transparent;}
+
+/* 일정 */
+.sch-wrap{flex:1;overflow-y:auto;padding:12px;background:var(--bg0);}
+.week-group{margin-bottom:14px;}
+.week-label{font-size:11px;font-weight:500;color:var(--text3);margin-bottom:5px;padding:0 2px;}
+.sch-row{display:grid;grid-template-columns:68px 1fr 52px 64px 90px;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;cursor:pointer;transition:background .1s;font-size:11px;}
+.sch-row:hover{background:var(--bg3);}
+.sch-date{font-size:11px;font-weight:500;color:var(--text3);}
+.sch-today{color:var(--blue);font-weight:600;}
+.sch-over{color:var(--red);}
+
+/* 상세 모달 */
+.detail-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:flex-start;justify-content:center;padding-top:40px;}
+.detail-bg.open{display:flex;}
+.detail-panel{background:var(--bg2);border-radius:10px;border:1px solid var(--border2);width:560px;max-width:96vw;max-height:80vh;overflow-y:auto;display:flex;flex-direction:column;}
+.detail-header{display:flex;align-items:flex-start;gap:10px;padding:18px 20px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:1;}
+.detail-id{font-family:monospace;font-size:11px;color:var(--blue);font-weight:600;flex-shrink:0;margin-top:2px;}
+.detail-title{font-size:15px;font-weight:600;color:var(--text);flex:1;line-height:1.4;}
+.detail-close{color:var(--text3);cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;padding:2px 6px;}
+.detail-close:hover{color:var(--text);}
+.detail-body{padding:16px 20px;display:flex;flex-direction:column;gap:14px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.detail-field{display:flex;flex-direction:column;gap:4px;}
+.detail-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.detail-val{font-size:12px;color:var(--text2);}
+.detail-actions{display:flex;gap:8px;padding:0 20px 18px;flex-wrap:wrap;}
+.action-btn{font-size:11px;font-weight:500;padding:6px 14px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s;}
+.action-btn:hover{background:var(--bg3);color:var(--text);}
+.action-btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+.action-btn.primary:hover{background:#3A8ED0;}
+.redmine-open{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--blue);cursor:pointer;padding:6px 14px;border-radius:6px;border:1px solid #1A2E42;background:var(--blue-dim);transition:all .15s;}
+.redmine-open:hover{background:#1A2E42;}
+.detail-status-row{display:flex;gap:6px;flex-wrap:wrap;}
+.status-opt{font-size:11px;padding:4px 12px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;}
+.status-opt:hover{color:var(--text2);}
+.status-opt.on{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);}
+
+/* 등록 모달 */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-start;justify-content:center;padding-top:48px;}
+.mbg.open{display:flex;}
+.modal{background:var(--bg2);border-radius:10px;border:1px solid var(--border2);width:500px;max-width:96vw;padding:22px;display:flex;flex-direction:column;gap:12px;}
+.mhdr{font-size:14px;font-weight:600;color:var(--text);}
+.frow{display:flex;flex-direction:column;gap:4px;}
+.flabel{font-size:11px;color:var(--text3);}
+.finput,.fsel2{font-size:12px;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg3);color:var(--text);font-family:inherit;width:100%;}
+.finput:focus,.fsel2:focus{outline:none;border-color:var(--blue);}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:4px;}
+.btn-c{font-size:12px;padding:6px 16px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;}
+.btn-s{font-size:12px;font-weight:500;padding:6px 16px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="alert-bar">
+  <span class="a-label">긴급</span>
+  <span class="a-pill a-crit" onclick="quickFilter('Critical')"><span id="a-crit">0</span> Critical</span>
+  <span class="a-pill a-fix" onclick="quickFilter('수정중')"><span id="a-fix">0</span> 수정중</span>
+  <div class="a-sep"></div>
+  <span class="a-over" id="a-over"></span>
+  <div class="a-right">
+    <div class="sprint-wrap">
+      <span>Sprint 12 · Alpha Polish</span>
+      <div class="sprint-bar"><div class="sprint-fill" id="sp-fill" style="width:0%"></div></div>
+      <span id="sp-pct" style="color:var(--green);font-weight:500;">0%</span>
+    </div>
+    <button class="btn-new" onclick="openModal()">+ 새 이슈</button>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="vtab on" id="vt-list" onclick="setView('list')">리스트</div>
+  <div class="vtab" id="vt-kanban" onclick="setView('kanban')">칸반</div>
+  <div class="vtab" id="vt-team" onclick="setView('team')">팀별</div>
+  <div class="vtab" id="vt-schedule" onclick="setView('schedule')">일정</div>
+  <div class="tab-sep"></div>
+  <div class="tab-right">
+    <span class="fchip on" id="d-all" onclick="setDate('all',this)">전체</span>
+    <span class="fchip" id="d-over" onclick="setDate('over',this)">기한초과</span>
+    <select class="fsel" id="pfSel" onchange="render()">
+      <option value="">전체 플랫폼</option>
+      <option>PC</option><option>Mobile</option><option>공통</option>
+    </select>
+    <select class="fsel" id="sortSel" onchange="render()">
+      <option value="prio">우선순위순</option>
+      <option value="id">ID순</option>
+      <option value="due">마감일순</option>
+    </select>
+  </div>
+</div>
+
+<div class="kpi-bar">
+  <div class="kpi" onclick="quickFilter('')"><div class="kpi-n" id="s0">0</div><div class="kpi-l">전체</div></div>
+  <div class="kpi" onclick="quickFilter('진행중')"><div class="kpi-n" style="color:var(--green)" id="s1">0</div><div class="kpi-l">진행중</div></div>
+  <div class="kpi" onclick="quickFilter('QA중')"><div class="kpi-n" style="color:var(--purple)" id="s2">0</div><div class="kpi-l">QA중</div></div>
+  <div class="kpi" onclick="quickFilter('수정중')"><div class="kpi-n" style="color:var(--amber)" id="s3">0</div><div class="kpi-l">수정중</div></div>
+  <div class="kpi" onclick="setDate('over',document.getElementById('d-over'))"><div class="kpi-n" style="color:var(--red)" id="s4">0</div><div class="kpi-l">기한초과</div></div>
+  <div class="kpi" onclick="quickFilter('완료')"><div class="kpi-n" style="color:var(--text3)" id="s5">0</div><div class="kpi-l">완료</div></div>
+</div>
+
+<div class="body">
+  <div class="sidebar">
+    <div class="sb-label">릴리즈</div>
+    <div id="relList"></div>
+    <div class="sb-div"></div>
+    <div class="sb-label">파트</div>
+    <div class="part-row on" onclick="setPart('',this)">전체 파트</div>
+    <div class="part-row" onclick="setPart('기획',this)"><span class="pdot" style="background:#1D9E75"></span>기획</div>
+    <div class="part-row" onclick="setPart('아트',this)"><span class="pdot" style="background:#8B7FE8"></span>아트</div>
+    <div class="part-row" onclick="setPart('프로그램',this)"><span class="pdot" style="background:#E07070"></span>프로그램</div>
+    <div class="part-row" onclick="setPart('QA팀',this)"><span class="pdot" style="background:#D4537E"></span>QA팀</div>
+    <div class="part-row" onclick="setPart('사운드',this)"><span class="pdot" style="background:#EF9F27"></span>사운드</div>
+    <div class="sb-div"></div>
+    <div class="sb-label">워크로드</div>
+    <div id="workload"></div>
+  </div>
+  <div class="main">
+    <div id="viewArea"></div>
+  </div>
+</div>
+</div>
+
+<!-- 상세 패널 -->
+<div class="detail-bg" id="detailBg" onclick="closeDetail(event)">
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <span class="detail-id" id="d-id"></span>
+    <span class="detail-title" id="d-title"></span>
+    <span class="detail-close" onclick="closeDetailDirect()">✕</span>
+  </div>
+  <div class="detail-body">
+    <div class="detail-grid">
+      <div class="detail-field"><div class="detail-label">상태</div><div class="detail-val" id="d-status"></div></div>
+      <div class="detail-field"><div class="detail-label">우선순위</div><div class="detail-val" id="d-prio"></div></div>
+      <div class="detail-field"><div class="detail-label">담당 파트</div><div class="detail-val" id="d-part"></div></div>
+      <div class="detail-field"><div class="detail-label">담당자</div><div class="detail-val" id="d-assignee"></div></div>
+      <div class="detail-field"><div class="detail-label">릴리즈</div><div class="detail-val" id="d-rel"></div></div>
+      <div class="detail-field"><div class="detail-label">빌드</div><div class="detail-val" id="d-build"></div></div>
+      <div class="detail-field"><div class="detail-label">플랫폼</div><div class="detail-val" id="d-pf"></div></div>
+      <div class="detail-field"><div class="detail-label">마감일</div><div class="detail-val" id="d-due"></div></div>
+    </div>
+    <div>
+      <div class="detail-label" style="margin-bottom:8px;">상태 변경</div>
+      <div class="detail-status-row" id="d-status-opts"></div>
+    </div>
+  </div>
+  <div class="detail-actions">
+    <span class="redmine-open" id="d-redmine-link" onclick="openRedmine()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M7 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 2h4v4M14 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Redmine에서 열기
+    </span>
+    <button class="action-btn" onclick="closeDetailDirect()">닫기</button>
+  </div>
+</div>
+</div>
+
+<!-- 등록 모달 -->
+<div class="mbg" id="modalBg">
+<div class="modal">
+  <div class="mhdr">새 이슈 등록</div>
+  <div class="frow"><div class="flabel">제목</div><input class="finput" id="nTitle" placeholder="이슈 제목을 입력하세요"></div>
+  <div class="f3">
+    <div class="frow"><div class="flabel">릴리즈</div><select class="fsel2" id="nRel" onchange="updateBuildOpts()"></select></div>
+    <div class="frow"><div class="flabel">빌드</div><select class="fsel2" id="nBuild"></select></div>
+    <div class="frow"><div class="flabel">빌드 유형</div>
+      <select class="fsel2" id="nType"><option>정기업데이트</option><option>긴급패치</option><option>핫픽스</option></select>
+    </div>
+  </div>
+  <div class="f3">
+    <div class="frow"><div class="flabel">상태</div>
+      <select class="fsel2" id="nStatus"><option>신규</option><option>진행중</option><option>QA대기</option><option>QA중</option><option>수정중</option><option>완료</option></select>
+    </div>
+    <div class="frow"><div class="flabel">우선순위</div>
+      <select class="fsel2" id="nPrio"><option>Normal</option><option>High</option><option>Critical</option><option>Low</option></select>
+    </div>
+    <div class="frow"><div class="flabel">플랫폼</div>
+      <select class="fsel2" id="nPf"><option>공통</option><option>PC</option><option>Mobile</option></select>
+    </div>
+  </div>
+  <div class="f3">
+    <div class="frow"><div class="flabel">담당 파트</div>
+      <select class="fsel2" id="nPart"><option>기획</option><option>아트</option><option>프로그램</option><option>QA팀</option><option>사운드</option></select>
+    </div>
+    <div class="frow"><div class="flabel">담당자</div>
+      <select class="fsel2" id="nAssignee"><option>김민준</option><option>이서연</option><option>박준혁</option><option>최유진</option><option>정하은</option><option>오세찬</option></select>
+    </div>
+    <div class="frow"><div class="flabel">마감일</div><input class="finput" id="nDue" type="date"></div>
+  </div>
+  <div class="mfoot">
+    <button class="btn-c" onclick="closeModal()">취소</button>
+    <button class="btn-s" onclick="submitIssue()">등록</button>
+  </div>
+</div>
+</div>
+
+<script>
+const REDMINE_URL = 'https://redmine.project-nova.com/issues/';
+const TODAY = new Date('2025-07-03');
+const PRIO_ORD = {Critical:0,High:1,Normal:2,Low:3};
+const ST_CYCLE = ['신규','진행중','QA대기','QA중','수정중','완료'];
+const ST_CLS = {신규:'s-new',진행중:'s-prog','QA대기':'s-qawait','QA중':'s-qa',수정중:'s-fix',완료:'s-done'};
+const TYPE_COLOR = {'정기업데이트':'#1D9E75','긴급패치':'#EF9F27','핫픽스':'#E24B4A'};
+const PART_DOT = {기획:'#1D9E75',아트:'#8B7FE8',프로그램:'#E07070','QA팀':'#D4537E',사운드:'#EF9F27'};
+const AV_COLORS = ['#4A9EE0','#1D9E75','#E07070','#8B7FE8','#D4537E','#EF9F27'];
+const ASSIGNEES = ['김민준','이서연','박준혁','최유진','정하은','오세찬'];
+const KOL_BG = {신규:'#0D1A26',진행중:'#0A1A12','QA대기':'#1E1408','QA중':'#1A1028',수정중:'#1A0E0E',완료:'#161616'};
+const KOL_TC = {신규:'#4A9EE0',진행중:'#1D9E75','QA대기':'#EF9F27','QA중':'#8B7FE8',수정중:'#E07070',완료:'#5A5A68'};
+
+const RELEASES = [
+  {ver:'v1.0',name:'정식 출시',color:'#8B7FE8',builds:[{name:'1차 빌드',type:'정기업데이트'},{name:'2차 빌드',type:'정기업데이트'},{name:'3차 빌드',type:'핫픽스'}]},
+  {ver:'v1.1',name:'시즌 1 업데이트',color:'#1D9E75',builds:[{name:'1차 빌드',type:'정기업데이트'},{name:'2차 빌드',type:'긴급패치'}]},
+  {ver:'v1.2',name:'밸런스 패치',color:'#4A9EE0',builds:[{name:'1차 빌드',type:'정기업데이트'}]},
+  {ver:'v1.3',name:'콜라보 이벤트',color:'#EF9F27',builds:[{name:'1차 빌드',type:'정기업데이트'}]},
+];
+const REL_MAP = {};
+RELEASES.forEach(r => REL_MAP[r.ver] = r);
+
+let issues = [
+  {id:'NOV-041',title:'보스 3페이즈 충돌 판정 오류',status:'수정중',prio:'Critical',part:'프로그램',assignee:'박준혁',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'PC',due:'2025-06-30'},
+  {id:'NOV-040',title:'스킬 UI 쿨타임 표시 깨짐 (iPad)',status:'QA중',prio:'High',part:'아트',assignee:'이서연',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'Mobile',due:'2025-07-05'},
+  {id:'NOV-039',title:'서버 매칭 응답 지연 >5초',status:'진행중',prio:'Critical',part:'프로그램',assignee:'정하은',rel:'v1.2',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-02'},
+  {id:'NOV-038',title:'기본 공격 데미지 재밸런싱',status:'완료',prio:'Normal',part:'기획',assignee:'김민준',rel:'v1.2',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-06-28'},
+  {id:'NOV-037',title:'인벤토리 드래그 앤 드롭 구현',status:'진행중',prio:'Normal',part:'프로그램',assignee:'이서연',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'PC',due:'2025-07-07'},
+  {id:'NOV-036',title:'BGM 루프 끊김 (던전 1-3)',status:'QA대기',prio:'High',part:'사운드',assignee:'최유진',rel:'v1.1',build:'2차 빌드',type:'긴급패치',pf:'공통',due:'2025-07-04'},
+  {id:'NOV-035',title:'로딩 화면 에셋 최적화',status:'완료',prio:'Low',part:'아트',assignee:'오세찬',rel:'v1.0',build:'3차 빌드',type:'핫픽스',pf:'공통',due:'2025-06-25'},
+  {id:'NOV-034',title:'신규 NPC 대화 누락',status:'신규',prio:'High',part:'기획',assignee:'박준혁',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-06'},
+  {id:'NOV-033',title:'파티 초대 알림 미수신 (Android)',status:'진행중',prio:'High',part:'프로그램',assignee:'정하은',rel:'v1.1',build:'2차 빌드',type:'긴급패치',pf:'Mobile',due:'2025-07-05'},
+  {id:'NOV-032',title:'콜라보 스킨 이펙트 아트',status:'신규',prio:'Normal',part:'아트',assignee:'오세찬',rel:'v1.3',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-08'},
+  {id:'NOV-031',title:'시즌1 캐릭터 선택 UI 개편',status:'진행중',prio:'Normal',part:'기획',assignee:'김민준',rel:'v1.1',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-07'},
+  {id:'NOV-030',title:'QA 테스트 케이스 문서화',status:'QA대기',prio:'Low',part:'QA팀',assignee:'최유진',rel:'v1.0',build:'2차 빌드',type:'정기업데이트',pf:'공통',due:'2025-07-10'},
+  {id:'NOV-029',title:'튜토리얼 플로우 재설계',status:'수정중',prio:'High',part:'기획',assignee:'김민준',rel:'v1.0',build:'3차 빌드',type:'핫픽스',pf:'공통',due:'2025-07-01'},
+  {id:'NOV-028',title:'모바일 터치 반응속도 개선',status:'QA중',prio:'High',part:'프로그램',assignee:'박준혁',rel:'v1.1',build:'1차 빌드',type:'정기업데이트',pf:'Mobile',due:'2025-07-03'},
+  {id:'NOV-027',title:'정식출시 아이템 드롭률 밸런스',status:'완료',prio:'Normal',part:'기획',assignee:'김민준',rel:'v1.0',build:'1차 빌드',type:'정기업데이트',pf:'공통',due:'2025-06-20'},
+];
+
+let nextNum=26, fRels=new Set(), fPart='', fSt='', fDate='all', curView='list', curDetail=null;
+
+function isOver(i){return i.due && new Date(i.due)<TODAY && i.status!=='완료';}
+function pcls(p){return p==='Critical'?'p-crit':p==='High'?'p-high':p==='Low'?'p-low':'p-norm';}
+function avColor(n){const i=ASSIGNEES.indexOf(n);return AV_COLORS[i>=0?i:0];}
+function ini(n){return n.charAt(0);}
+function avEl(n,sz=20){const c=avColor(n);return `<div class="av" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz*.48)}px;background:${c}25;color:${c}">${ini(n)}</div>`;}
+function issueNum(id){return parseInt(id.replace('NOV-',''),10);}
+function redmineUrl(id){return REDMINE_URL + issueNum(id);}
+
+function getFiltered(){
+  const pf=document.getElementById('pfSel').value;
+  const sort=document.getElementById('sortSel').value;
+  let d=issues.filter(i=>{
+    if(fRels.size>0 && !fRels.has(i.rel)) return false;
+    if(fPart && i.part!==fPart) return false;
+    if(fSt && i.status!==fSt) return false;
+    if(pf && i.pf!==pf) return false;
+    if(fDate==='over' && !isOver(i)) return false;
+    return true;
+  });
+  if(sort==='due') d.sort((a,b)=>(a.due||'9999')>(b.due||'9999')?1:-1);
+  else if(sort==='id') d.sort((a,b)=>b.id.localeCompare(a.id));
+  else d.sort((a,b)=>PRIO_ORD[a.prio]-PRIO_ORD[b.prio]);
+  d.sort((a,b)=>{
+    const ac=a.prio==='Critical'&&a.status!=='완료';
+    const bc=b.prio==='Critical'&&b.status!=='완료';
+    return ac===bc?0:ac?-1:1;
+  });
+  return d;
+}
+
+function buildSidebar(){
+  let html='';
+  RELEASES.forEach(r=>{
+    const cnt=issues.filter(i=>i.rel===r.ver).length;
+    const on=fRels.has(r.ver);
+    html+=`<div class="rel-row" onclick="toggleRel('${r.ver}')">
+      <div class="chk ${on?'on':''}" style="${on?'background:'+r.color:''}"></div>
+      <div class="rel-info">
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span class="rel-ver" style="color:${r.color}">${r.ver}</span>
+          <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:var(--bg3);color:var(--text3)">${cnt}</span>
+        </div>
+        <div class="rel-name-s">${r.name}</div>
+      </div>
+    </div>
+    <div class="rel-builds">
+      ${r.builds.map(b=>{
+        const bc=issues.filter(i=>i.rel===r.ver&&i.build===b.name).length;
+        return `<div class="build-row"><span class="tdot" style="background:${TYPE_COLOR[b.type]||'#888'}"></span><span>${b.name}</span><span style="margin-left:auto;font-size:10px;color:var(--text3)">${bc}</span></div>`;
+      }).join('')}
+    </div>`;
+  });
+  document.getElementById('relList').innerHTML=html;
+
+  const maxLoad=Math.max(...ASSIGNEES.map(a=>issues.filter(i=>i.assignee===a&&i.status!=='완료').length),1);
+  document.getElementById('workload').innerHTML=ASSIGNEES.map(a=>{
+    const active=issues.filter(i=>i.assignee===a&&i.status!=='완료').length;
+    const hasCrit=issues.some(i=>i.assignee===a&&i.prio==='Critical'&&i.status!=='완료');
+    const pct=Math.round(active/maxLoad*100);
+    const bc=hasCrit?'#E24B4A':active>=3?'#EF9F27':'#1D9E75';
+    return `<div class="wl-item">
+      <div class="wl-top">${avEl(a,20)}<span style="font-size:11px;color:var(--text2);flex:1">${a}</span><span style="font-size:10px;font-weight:500;color:${hasCrit?'#E24B4A':'var(--text3)'}">${active}</span></div>
+      <div class="wl-bar"><div class="wl-fill" style="width:${pct}%;background:${bc}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  const all=issues;
+  document.getElementById('s0').textContent=all.length;
+  document.getElementById('s1').textContent=all.filter(i=>i.status==='진행중').length;
+  document.getElementById('s2').textContent=all.filter(i=>i.status==='QA중').length;
+  document.getElementById('s3').textContent=all.filter(i=>i.status==='수정중').length;
+  document.getElementById('s4').textContent=all.filter(i=>isOver(i)).length;
+  document.getElementById('s5').textContent=all.filter(i=>i.status==='완료').length;
+  document.getElementById('a-crit').textContent=all.filter(i=>i.prio==='Critical'&&i.status!=='완료').length;
+  document.getElementById('a-fix').textContent=all.filter(i=>i.status==='수정중').length;
+  const ov=all.filter(i=>isOver(i)).length;
+  document.getElementById('a-over').textContent=ov>0?`기한초과 ${ov}건`:'';
+  const pct=Math.round(all.filter(i=>i.status==='완료').length/all.length*100);
+  document.getElementById('sp-fill').style.width=pct+'%';
+  document.getElementById('sp-pct').textContent=pct+'%';
+  buildSidebar();
+  if(curView==='list') renderList();
+  else if(curView==='kanban') renderKanban();
+  else if(curView==='team') renderTeam();
+  else renderSchedule();
+}
+
+function renderList(){
+  const data=getFiltered();
+  document.getElementById('viewArea').innerHTML=`<div class="list-wrap">
+    <div class="row hdr"><span></span><span>ID</span><span>제목</span><span>파트</span><span>상태</span><span>플랫폼</span><span>릴리즈 · 빌드</span><span>마감일</span></div>
+    ${data.map(i=>{
+      const ov=isOver(i); const due=i.due?i.due.slice(5).replace('-','/'):'–';
+      const r=REL_MAP[i.rel]; const tc=TYPE_COLOR[i.type]||'#888';
+      const isCrit=i.prio==='Critical'&&i.status!=='완료';
+      return `<div class="row" style="${isCrit?'border-left:2px solid var(--red);background:#140D0D;':''}" onclick="openDetail('${i.id}')">
+        <span><span class="pd ${pcls(i.prio)}"></span></span>
+        <span class="idc" title="Redmine #${issueNum(i.id)}">${i.id}</span>
+        <span class="itc">${i.title}</span>
+        <span><span class="badge badge-dim">${i.part}</span></span>
+        <span><span class="badge ${ST_CLS[i.status]||''}">${i.status}</span></span>
+        <span><span class="badge badge-dim">${i.pf}</span></span>
+        <span class="build-col">
+          <span class="bver" style="color:${r?.color||'#888'}">${i.rel} <span style="font-weight:400;color:var(--text3);font-size:10px">${r?.name||''}</span></span>
+          <span class="bname"><span class="tdot" style="background:${tc}"></span>${i.build}</span>
+        </span>
+        <span class="${ov?'overdue':''}" style="font-size:11px">${due}${ov?' !':''}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderKanban(){
+  document.getElementById('viewArea').innerHTML=`<div class="kanban">
+    ${ST_CYCLE.map(st=>{
+      const cards=getFiltered().filter(i=>i.status===st);
+      const bg=KOL_BG[st]||'#161618'; const tc=KOL_TC[st]||'#5A5A68';
+      return `<div class="kol">
+        <div class="kol-hdr" style="background:${bg};color:${tc}"><span>${st}</span><span class="kcount">${cards.length}</span></div>
+        ${cards.map(i=>{
+          const ov=isOver(i); const due=i.due?i.due.slice(5).replace('-','/'):'–';
+          const r=REL_MAP[i.rel]; const tc2=TYPE_COLOR[i.type]||'#888';
+          const isCrit=i.prio==='Critical';
+          return `<div class="kcard" style="${isCrit?'border-left:2px solid var(--red);background:#140D0D;':''}">
+            <div class="kcard-title" onclick="openDetail('${i.id}')">${i.title}</div>
+            <div class="kcard-meta">
+              <span class="badge badge-dim">${i.part}</span>
+              <span class="pd ${pcls(i.prio)}" style="margin-left:2px"></span>
+            </div>
+            <div class="kcard-foot">
+              <span style="font-size:10px;font-weight:600;color:${r?.color||'#888'}">${i.rel} <span style="font-weight:400;color:var(--text3)">${i.build}</span></span>
+              ${avEl(i.assignee,18)}
+            </div>
+            <div class="kcard-foot">
+              <a href="${redmineUrl(i.id)}" target="_blank" class="redmine-link" onclick="event.stopPropagation()">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M7 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 2h4v4M14 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                #${issueNum(i.id)}
+              </a>
+              <span class="ksub ${ov?'overdue':''}">${due}${ov?' !':''}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderTeam(){
+  const parts=['기획','아트','프로그램','QA팀','사운드'];
+  document.getElementById('viewArea').innerHTML=`<div class="team-view">
+    ${parts.map(part=>{
+      const pi=getFiltered().filter(i=>i.part===part);
+      if(!pi.length) return '';
+      const dot=PART_DOT[part]||'#888';
+      const active=pi.filter(i=>i.status!=='완료').length;
+      const done=pi.filter(i=>i.status==='완료').length;
+      const crit=pi.filter(i=>i.prio==='Critical'&&i.status!=='완료').length;
+      return `<div class="team-block">
+        <div class="team-hdr">
+          <span class="pdot" style="background:${dot};width:9px;height:9px;border-radius:50%;display:inline-block"></span>
+          <span class="team-title">${part}</span>
+          <div class="team-pills">
+            ${crit>0?`<span class="team-pill" style="background:var(--red-dim);color:var(--red);border-color:#3A1515">Critical ${crit}</span>`:''}
+            <span class="team-pill" style="background:var(--bg3);color:var(--text3);border-color:var(--border2)">진행 ${active}</span>
+            <span class="team-pill" style="background:var(--green-dim);color:var(--green);border-color:#122A1E">완료 ${done}</span>
+          </div>
+        </div>
+        ${pi.map(i=>{
+          const ov=isOver(i); const due=i.due?i.due.slice(5).replace('-','/'):'–';
+          const r=REL_MAP[i.rel]; const isCrit=i.prio==='Critical'&&i.status!=='완료';
+          return `<div class="row" style="grid-template-columns:20px 72px 1fr 64px 44px 100px 68px;${isCrit?'border-left:2px solid var(--red);background:#140D0D;':''}" onclick="openDetail('${i.id}')">
+            <span><span class="pd ${pcls(i.prio)}"></span></span>
+            <span class="idc">${i.id}</span>
+            <span class="itc">${i.title}</span>
+            <span><span class="badge ${ST_CLS[i.status]||''}">${i.status}</span></span>
+            <span>${avEl(i.assignee,20)}</span>
+            <span class="build-col"><span class="bver" style="color:${r?.color||'#888'}">${i.rel}</span><span class="bname">${i.build}</span></span>
+            <span class="${ov?'overdue':''}" style="font-size:11px">${due}${ov?' !':''}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderSchedule(){
+  const todayStr=TODAY.toISOString().slice(0,10);
+  const data=getFiltered().filter(i=>i.due&&i.status!=='완료').sort((a,b)=>a.due>b.due?1:-1);
+  const weeks={};
+  data.forEach(i=>{
+    const d=new Date(i.due); const ws=new Date(d);
+    ws.setDate(d.getDate()-d.getDay()+1);
+    const key=ws.toISOString().slice(0,10);
+    if(!weeks[key]) weeks[key]=[];
+    weeks[key].push(i);
+  });
+  document.getElementById('viewArea').innerHTML=`<div class="sch-wrap">
+    ${Object.entries(weeks).map(([wk,items])=>{
+      const wd=new Date(wk); const we=new Date(wk); we.setDate(we.getDate()+6);
+      return `<div class="week-group">
+        <div class="week-label">${wd.getMonth()+1}/${wd.getDate()} – ${we.getMonth()+1}/${we.getDate()} 주</div>
+        ${items.map(i=>{
+          const ov=isOver(i); const isToday=i.due===todayStr;
+          const d=new Date(i.due); const ds=`${d.getMonth()+1}/${d.getDate()}`;
+          const r=REL_MAP[i.rel]; const isCrit=i.prio==='Critical';
+          return `<div class="sch-row" style="${isCrit?'border-left:2px solid var(--red);':''}" onclick="openDetail('${i.id}')">
+            <span class="sch-date ${isToday?'sch-today':ov?'sch-over':''}">${ds}${isToday?' 오늘':ov?' 초과':''}</span>
+            <span class="itc">${i.title}</span>
+            <span><span class="badge badge-dim">${i.part}</span></span>
+            <span><span class="badge ${ST_CLS[i.status]||''}">${i.status}</span></span>
+            <span style="display:flex;align-items:center;gap:5px;">${avEl(i.assignee,20)}<span style="font-size:10px;font-weight:600;color:${r?.color||'#888'}">${i.rel}</span></span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// 상세 패널
+function openDetail(id){
+  const i=issues.find(x=>x.id===id); if(!i) return;
+  curDetail=id;
+  const r=REL_MAP[i.rel];
+  const ov=isOver(i);
+  document.getElementById('d-id').textContent=i.id+' · #'+issueNum(i.id);
+  document.getElementById('d-title').textContent=i.title;
+  document.getElementById('d-status').innerHTML=`<span class="badge ${ST_CLS[i.status]||''}">${i.status}</span>`;
+  document.getElementById('d-prio').innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px;"><span class="pd ${pcls(i.prio)}"></span>${i.prio}</span>`;
+  document.getElementById('d-part').textContent=i.part;
+  document.getElementById('d-assignee').innerHTML=`<span style="display:inline-flex;align-items:center;gap:6px;">${avEl(i.assignee,20)}<span>${i.assignee}</span></span>`;
+  document.getElementById('d-rel').innerHTML=`<span style="color:${r?.color||'#888'};font-weight:600">${i.rel}</span> <span style="color:var(--text3)">${r?.name||''}</span>`;
+  document.getElementById('d-build').innerHTML=`<span style="display:inline-flex;align-items:center;gap:4px;"><span class="tdot" style="background:${TYPE_COLOR[i.type]||'#888'}"></span>${i.build} <span style="color:var(--text3)">(${i.type})</span></span>`;
+  document.getElementById('d-pf').textContent=i.pf;
+  document.getElementById('d-due').innerHTML=`<span class="${ov?'overdue':''}">${i.due||'–'}${ov?' (기한초과)':''}</span>`;
+  document.getElementById('d-status-opts').innerHTML=ST_CYCLE.map(s=>`<span class="status-opt ${i.status===s?'on':''}" onclick="changeStatus('${id}','${s}')">${s}</span>`).join('');
+  document.getElementById('detailBg').classList.add('open');
+}
+
+function changeStatus(id,st){
+  const i=issues.find(x=>x.id===id); if(!i) return;
+  i.status=st;
+  render();
+  openDetail(id);
+}
+
+function openRedmine(){
+  if(!curDetail) return;
+  window.open(redmineUrl(curDetail),'_blank');
+}
+
+function closeDetail(e){
+  if(e.target===document.getElementById('detailBg')) closeDetailDirect();
+}
+function closeDetailDirect(){
+  document.getElementById('detailBg').classList.remove('open');
+  curDetail=null;
+}
+
+function toggleRel(ver){if(fRels.has(ver))fRels.delete(ver);else fRels.add(ver);render();}
+function quickFilter(st){fSt=st;render();}
+function setView(v){curView=v;['list','kanban','team','schedule'].forEach(x=>document.getElementById('vt-'+x).classList.toggle('on',x===v));render();}
+function setPart(v,el){fPart=v;document.querySelectorAll('.part-row').forEach(e=>e.classList.remove('on'));el.classList.add('on');render();}
+function setDate(v,el){fDate=v;['d-all','d-over'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('on');});if(el)el.classList.add('on');render();}
+function updateBuildOpts(){const r=REL_MAP[document.getElementById('nRel').value];document.getElementById('nBuild').innerHTML=(r?.builds||[]).map(b=>`<option>${b.name}</option>`).join('');}
+function openModal(){document.getElementById('nRel').innerHTML=RELEASES.map(r=>`<option value="${r.ver}">${r.ver} · ${r.name}</option>`).join('');updateBuildOpts();document.getElementById('nDue').value='2025-07-15';document.getElementById('modalBg').classList.add('open');}
+function closeModal(){document.getElementById('modalBg').classList.remove('open');}
+function submitIssue(){
+  const title=document.getElementById('nTitle').value.trim();
+  if(!title){alert('제목을 입력해주세요.');return;}
+  const num=String(nextNum--).padStart(3,'0');
+  issues.unshift({id:'NOV-0'+num,title,status:document.getElementById('nStatus').value,prio:document.getElementById('nPrio').value,part:document.getElementById('nPart').value,assignee:document.getElementById('nAssignee').value,rel:document.getElementById('nRel').value,build:document.getElementById('nBuild').value,type:document.getElementById('nType').value,pf:document.getElementById('nPf').value,due:document.getElementById('nDue').value});
+  closeModal();document.getElementById('nTitle').value='';render();
+}
+render();
+</script>
+</body>
+</html>
