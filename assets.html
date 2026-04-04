@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GamePM Asset View — Project NOVA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg0:#0D0D0F;--bg1:#141416;--bg2:#1C1C1F;--bg3:#232327;--bg4:#2C2C31;
+  --border:#252529;--border2:#35353C;
+  --text:#E6E6EA;--text2:#96969E;--text3:#52525A;
+  --red:#E24B4A;--red-dim:#1A0D0D;--red-b:#2E1515;
+  --amber:#EF9F27;--amber-dim:#1A1208;--amber-b:#2E2008;
+  --green:#1D9E75;--green-dim:#0A1810;--green-b:#102A1C;
+  --blue:#4A9EE0;--blue-dim:#0A1824;--blue-b:#183045;
+  --purple:#8B7FE8;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg0);color:var(--text);min-height:100vh;}
+
+.topbar{display:flex;align-items:center;gap:10px;padding:0 20px;height:44px;background:var(--bg0);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.t-logo{font-size:13px;font-weight:600;letter-spacing:-.3px;}
+.t-div{width:1px;height:16px;background:var(--border2);}
+.t-proj{font-size:11px;color:var(--text3);}
+.t-page{font-size:11px;color:var(--text2);padding:2px 8px;border-radius:4px;background:var(--bg3);}
+.api-badge{display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:10px;}
+.api-drive{background:#0A1F10;color:#34A853;border:1px solid #1A3A20;}
+.api-rm{background:var(--green-dim);color:var(--green);border:1px solid var(--green-b);}
+.api-dot{width:5px;height:5px;border-radius:50%;animation:blink 2s infinite;}
+.drive-dot{background:#34A853;}.rm-dot{background:var(--green);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.t-right{margin-left:auto;}
+.t-link{font-size:11px;color:var(--text3);cursor:pointer;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.t-link:hover{background:var(--bg3);color:var(--text2);}
+
+.cat-bar{display:flex;align-items:center;padding:0 20px;height:40px;background:var(--bg1);border-bottom:1px solid var(--border);gap:0;position:sticky;top:44px;z-index:49;}
+.cat-lbl{font-size:10px;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;padding-right:12px;flex-shrink:0;}
+.ctab{font-size:13px;font-weight:500;padding:0 16px;height:100%;display:flex;align-items:center;gap:7px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.ctab:hover{color:var(--text2);}
+.ctab.on{color:var(--text);border-bottom-color:var(--blue);}
+.ctab-cnt{font-size:10px;padding:1px 6px;border-radius:999px;background:var(--bg3);color:var(--text3);}
+.ctab.on .ctab-cnt{background:var(--blue-dim);color:var(--blue);}
+
+.filter-bar{display:flex;align-items:center;gap:8px;padding:8px 20px;background:var(--bg1);border-bottom:1px solid var(--border);position:sticky;top:84px;z-index:48;flex-wrap:wrap;}
+.f-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;}
+.fc{font-size:11px;padding:3px 10px;border-radius:999px;background:transparent;color:var(--text3);cursor:pointer;transition:all .12s;border:1px solid var(--border2);}
+.fc:hover{color:var(--text2);background:var(--bg3);}
+.fc.on{background:var(--bg3);color:var(--text);font-weight:500;}
+.f-sep{width:1px;height:18px;background:var(--border2);}
+.fsel{font-size:11px;padding:3px 10px;border:1px solid var(--border2);border-radius:999px;background:var(--bg2);color:var(--text2);cursor:pointer;font-family:inherit;}
+.fsel.on{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);}
+.f-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.drive-sync{display:flex;align-items:center;gap:5px;font-size:11px;color:#34A853;padding:3px 10px;border-radius:999px;background:#0A1F10;border:1px solid #1A3A20;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#34A853;animation:blink 1.5s infinite;}
+
+.grid-wrap{padding:20px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:14px;}
+
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative;}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.35);}
+.card-img-wrap{width:100%;aspect-ratio:1;overflow:hidden;position:relative;background:var(--bg3);}
+.card-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
+.card:hover .card-img-wrap img{transform:scale(1.05);}
+.card-img-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,.65) 100%);}
+.card-new-badge{position:absolute;top:8px;right:8px;font-size:9px;font-weight:600;padding:2px 7px;border-radius:999px;background:#34A853;color:#fff;z-index:1;}
+.card-body{padding:10px 12px 12px;}
+.card-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-row{display:flex;align-items:center;justify-content:space-between;font-size:10px;margin-bottom:3px;}
+.card-assignee{display:flex;align-items:center;gap:5px;color:var(--text2);}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-top:1px solid var(--border);background:var(--bg2);}
+.rm-link{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--blue);cursor:pointer;transition:opacity .15s;}
+.rm-link:hover{opacity:.7;}
+.drive-link{display:flex;align-items:center;gap:4px;font-size:10px;color:#34A853;cursor:pointer;transition:opacity .15s;}
+.drive-link:hover{opacity:.7;}
+
+.badge{font-size:10px;padding:2px 7px;border-radius:999px;font-weight:500;border:1px solid transparent;}
+.s-작업중{background:var(--blue-dim);color:var(--blue);border-color:var(--blue-b);}
+.s-검토중{background:var(--amber-dim);color:var(--amber);border-color:var(--amber-b);}
+.s-수정중{background:var(--red-dim);color:#E07070;border-color:var(--red-b);}
+.s-완료{background:var(--green-dim);color:var(--green);border-color:var(--green-b);}
+
+/* 스켈레톤 로딩 */
+.skeleton{background:var(--bg3);border-radius:4px;animation:shimmer 1.5s infinite;}
+@keyframes shimmer{0%{opacity:.5;}50%{opacity:1;}100%{opacity:.5;}}
+
+.dbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:flex-start;justify-content:center;padding-top:44px;}
+.dbg.open{display:flex;}
+.dpanel{background:var(--bg2);border-radius:12px;border:1px solid var(--border2);width:580px;max-width:96vw;max-height:88vh;overflow-y:auto;display:flex;flex-direction:column;}
+.d-img-wrap{width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;border-radius:12px 12px 0 0;background:var(--bg3);}
+.d-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.d-img-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 55%,rgba(0,0,0,.7) 100%);}
+.d-img-label{position:absolute;bottom:14px;left:16px;font-size:17px;font-weight:700;color:#fff;z-index:1;text-shadow:0 2px 8px rgba(0,0,0,.5);}
+.d-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px;}
+.d-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.d-name{font-size:16px;font-weight:700;color:var(--text);}
+.d-x{color:var(--text3);cursor:pointer;font-size:20px;line-height:1;padding:0 4px;}
+.d-x:hover{color:var(--text);}
+.d-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.d-field{display:flex;flex-direction:column;gap:4px;}
+.d-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.d-val{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;}
+.d-desc{font-size:12px;color:var(--text2);line-height:1.6;padding:10px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);}
+.d-actions{display:flex;gap:8px;}
+.d-btn-rm{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;cursor:pointer;padding:7px 16px;border-radius:6px;border:1px solid var(--blue-b);background:var(--blue-dim);color:var(--blue);transition:all .15s;font-family:inherit;}
+.d-btn-rm:hover{background:var(--blue);color:#fff;}
+.d-btn-drive{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;cursor:pointer;padding:7px 16px;border-radius:6px;border:1px solid #1A3A20;background:#0A1F10;color:#34A853;transition:all .15s;font-family:inherit;}
+.d-btn-drive:hover{background:#1A3A20;}
+.d-btn-cl{font-size:11px;padding:7px 14px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;}
+.d-btn-cl:hover{background:var(--bg3);}
+
+.rm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:300;align-items:flex-start;justify-content:center;padding-top:28px;}
+.rm-bg.open{display:flex;}
+.rm-win{background:#fff;border-radius:8px;width:700px;max-width:96vw;max-height:88vh;overflow-y:auto;color:#333;display:flex;flex-direction:column;}
+.rm-titlebar{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#2A2A2A;border-radius:8px 8px 0 0;flex-shrink:0;}
+.rm-dots{display:flex;gap:5px;}
+.rm-dot2{width:11px;height:11px;border-radius:50%;}
+.rm-url-bar{flex:1;font-size:11px;color:#888;font-family:monospace;background:#1A1A1A;padding:3px 10px;border-radius:4px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rm-x2{color:#888;cursor:pointer;font-size:14px;padding:0 4px;}
+.rm-x2:hover{color:#fff;}
+.rm-topnav{background:#628DB6;padding:0 16px;display:flex;align-items:center;flex-shrink:0;}
+.rm-tnav{font-size:12px;color:rgba(255,255,255,.75);padding:8px 12px;border-bottom:2px solid transparent;cursor:pointer;}
+.rm-tnav.on{color:#fff;border-bottom-color:#fff;}
+.rm-subnav{background:#ECF3F0;border-bottom:1px solid #D0D8D4;padding:5px 16px;font-size:11px;color:#555;flex-shrink:0;}
+.rm-body{padding:16px 20px;}
+.rm-notice{background:#FFF8E1;border:1px solid #FFD54F;border-radius:4px;padding:8px 12px;font-size:11px;color:#795548;margin-bottom:12px;}
+.rm-meta{font-size:11px;color:#999;margin-bottom:4px;}
+.rm-title{font-size:18px;font-weight:600;color:#222;margin-bottom:12px;line-height:1.4;}
+.rm-btns{display:flex;gap:6px;margin-bottom:14px;}
+.rm-action{font-size:11px;padding:4px 12px;border-radius:3px;border:1px solid #CCC;background:#F5F5F5;color:#444;cursor:pointer;}
+.rm-action.pri{background:#628DB6;color:#fff;border-color:#628DB6;}
+.rm-attrs{display:grid;grid-template-columns:1fr 1fr;border:1px solid #DDD;border-radius:4px;overflow:hidden;margin-bottom:16px;}
+.rm-attr{padding:7px 12px;border-bottom:1px solid #EEE;border-right:1px solid #EEE;font-size:12px;}
+.rm-attr:nth-child(even){border-right:none;}
+.rm-attr-l{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
+.rm-attr-v{color:#222;font-weight:500;}
+.rm-st-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;}
+.rm-sec{font-size:13px;font-weight:600;color:#555;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #EEE;}
+.rm-desc-box{background:#F9F9F9;border:1px solid #EEE;border-radius:4px;padding:12px;font-size:12px;color:#444;line-height:1.6;margin-bottom:16px;}
+.rm-hist{display:flex;flex-direction:column;gap:8px;}
+.rm-hist-item{display:flex;gap:10px;}
+.rm-hist-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;color:#fff;}
+.rm-hist-body{flex:1;background:#F5F5F5;border-radius:4px;padding:8px 10px;}
+.rm-hist-meta{font-size:11px;color:#888;margin-bottom:3px;}
+.rm-hist-txt{font-size:12px;color:#333;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg4);color:var(--text);font-size:12px;padding:10px 20px;border-radius:8px;border:1px solid var(--border2);z-index:999;transition:all .2s;opacity:0;pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.empty{text-align:center;padding:60px;color:var(--text3);font-size:13px;grid-column:1/-1;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="t-logo">GamePM</span>
+  <div class="t-div"></div>
+  <span class="t-proj">Project NOVA</span>
+  <span class="t-page">Asset View</span>
+  <span class="api-badge api-drive" style="margin-left:4px"><span class="api-dot drive-dot"></span>Google Drive API</span>
+  <span class="api-badge api-rm"><span class="api-dot rm-dot"></span>Redmine API</span>
+  <div class="t-right">
+    <a href="index.html" class="t-link">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      이슈 트래커
+    </a>
+  </div>
+</div>
+
+<div class="cat-bar">
+  <span class="cat-lbl">카테고리</span>
+  <div class="ctab on" id="ct-monster" onclick="setCat('monster',this)">
+    몬스터 <span class="ctab-cnt" id="cnt-monster">0</span>
+  </div>
+  <div class="ctab" id="ct-costume" onclick="setCat('costume',this)">
+    복장 <span class="ctab-cnt" id="cnt-costume">0</span>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <span class="f-lbl">상태</span>
+  <span class="fc on" id="fs-all" onclick="setFilter('all',this)">전체</span>
+  <span class="fc" id="fs-작업중" onclick="setFilter('작업중',this)">작업중</span>
+  <span class="fc" id="fs-검토중" onclick="setFilter('검토중',this)">검토중</span>
+  <span class="fc" id="fs-수정중" onclick="setFilter('수정중',this)">수정중</span>
+  <span class="fc" id="fs-완료" onclick="setFilter('완료',this)">완료</span>
+  <div class="f-sep"></div>
+  <select class="fsel" id="assigneeSel" onchange="renderGrid()">
+    <option value="">담당자 전체</option>
+    <option>이OO</option><option>오OO</option><option>박OO</option><option>최OO</option>
+  </select>
+  <div class="f-right">
+    <div class="drive-sync"><span class="sync-dot"></span>Drive 동기화 중</div>
+    <span style="font-size:11px;color:var(--text3)">마지막 동기화: 방금</span>
+  </div>
+</div>
+
+<div class="grid-wrap">
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- 상세 -->
+<div class="dbg" id="dbg" onclick="dbgClose(event)">
+<div class="dpanel">
+  <div class="d-img-wrap" id="d-img-wrap">
+    <div class="d-img-overlay"></div>
+    <div class="d-img-label" id="d-img-label"></div>
+  </div>
+  <div class="d-body">
+    <div class="d-hdr">
+      <span class="d-name" id="d-name"></span>
+      <span class="d-x" onclick="closeDetail()">✕</span>
+    </div>
+    <div class="d-grid">
+      <div class="d-field"><div class="d-lbl">상태</div><div class="d-val" id="d-st"></div></div>
+      <div class="d-field"><div class="d-lbl">담당자</div><div class="d-val" id="d-as"></div></div>
+      <div class="d-field"><div class="d-lbl">Redmine 이슈</div><div class="d-val" id="d-rm"></div></div>
+      <div class="d-field"><div class="d-lbl">업로드 일시</div><div class="d-val" id="d-date"></div></div>
+      <div class="d-field"><div class="d-lbl">카테고리</div><div class="d-val" id="d-cat"></div></div>
+      <div class="d-field"><div class="d-lbl">Drive 경로</div><div class="d-val" id="d-drive"></div></div>
+    </div>
+    <div>
+      <div class="d-lbl" style="margin-bottom:6px;">설명</div>
+      <div class="d-desc" id="d-desc"></div>
+    </div>
+    <div class="d-actions">
+      <button class="d-btn-rm" onclick="openRm()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M7 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 2h4v4M14 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Redmine에서 열기
+      </button>
+      <button class="d-btn-drive" onclick="toast('Google Drive 연결 중...')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6.28 2.8L12 13.4l2.88-5L9.16 0H6.28zm6.44 10.6l2.88 5H22l-6.28-10.8-2.88 5H12.72zM2 18.6L4.88 24H19.12L22 18.6H2z"/></svg>
+        Drive에서 열기
+      </button>
+      <button class="d-btn-cl" onclick="closeDetail()">닫기</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 레드마인 데모 -->
+<div class="rm-bg" id="rmBg" onclick="rmBgClose(event)">
+<div class="rm-win">
+  <div class="rm-titlebar">
+    <div class="rm-dots">
+      <div class="rm-dot2" style="background:#FF5F57"></div>
+      <div class="rm-dot2" style="background:#FEBC2E"></div>
+      <div class="rm-dot2" style="background:#28C840"></div>
+    </div>
+    <div class="rm-url-bar" id="rm-url"></div>
+    <span class="rm-x2" onclick="closeRm()">✕</span>
+  </div>
+  <div class="rm-topnav">
+    <div class="rm-tnav on">프로젝트</div>
+    <div class="rm-tnav">이슈</div>
+    <div class="rm-tnav">로드맵</div>
+    <div class="rm-tnav">위키</div>
+  </div>
+  <div class="rm-subnav" id="rm-subnav"></div>
+  <div class="rm-body">
+    <div class="rm-notice">📌 데모 환경입니다. 실제 Redmine 서버 연동 시 편집 기능이 활성화됩니다.</div>
+    <div class="rm-meta" id="rm-meta"></div>
+    <div class="rm-title" id="rm-title"></div>
+    <div class="rm-btns">
+      <button class="rm-action pri" onclick="toast('데모 환경에서는 지원하지 않습니다')">편집</button>
+      <button class="rm-action" onclick="toast('데모 환경에서는 지원하지 않습니다')">복사</button>
+    </div>
+    <div class="rm-attrs" id="rm-attrs"></div>
+    <div class="rm-sec">설명</div>
+    <div class="rm-desc-box" id="rm-desc2"></div>
+    <div class="rm-sec">변경 이력</div>
+    <div class="rm-hist" id="rm-hist"></div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const AVC=['#4A9EE0','#1D9E75','#E07070','#8B7FE8','#D4537E','#EF9F27'];
+const NAMES=['이OO','오OO','박OO','최OO','정OO','김OO'];
+const STCOLOR={작업중:'#3B82F6',검토중:'#F59E0B',수정중:'#EF4444',완료:'#10B981'};
+const STBG={작업중:'#EFF6FF',검토중:'#FFFBEB',수정중:'#FEF2F2',완료:'#ECFDF5'};
+
+// picsum.photos — MMORPG 느낌 나는 어두운 판타지 이미지 ID
+// grayscale + 어두운 오버레이로 게임 에셋처럼 보이게
+const MONSTER_IMG_IDS=[10, 13, 15, 20, 22, 24, 29, 30, 37, 39, 41, 43, 47, 50, 52, 54, 56, 59, 62, 64, 67, 70, 73, 75];
+const COSTUME_IMG_IDS=[76, 77, 79, 82, 83, 85, 87, 90, 91, 93, 95, 97, 98, 100, 101, 103, 104, 106, 107, 109, 110, 111, 112, 113];
+
+const MONSTER_NAMES=[
+  'MON_DragonBoss_001','MON_Goblin_002','MON_BatSwarm_003','MON_SpiderQueen_004',
+  'MON_WolfAlpha_005','MON_Invader_006','MON_SkullKnight_007','MON_Scorpion_008',
+  'MON_SerpentKing_009','MON_Raptor_010','MON_Zombie_011','MON_Spectre_012',
+  'MON_IronGolem_013','MON_LavaLord_014','MON_LionBoss_015','MON_Croco_016',
+  'MON_SharkFin_017','MON_EyeOfChaos_018','MON_DarkEye_019','MON_Parasite_020',
+  'MON_Kraken_021','MON_Squid_022','MON_Lizard_023','MON_BugKing_024',
+];
+const COSTUME_NAMES=[
+  'COS_WarriorSet_001','COS_PaladinShield_002','COS_WizardRobe_003','COS_ArcherBow_004',
+  'COS_AssassinBlade_005','COS_CrownOfKing_006','COS_TheatreMask_007','COS_StaffOfLight_008',
+  'COS_GemArmor_009','COS_TridentHero_010','COS_CircusArmor_011','COS_AncientVase_012',
+  'COS_PainterSet_013','COS_KimonoSet_014','COS_NinjaGear_015','COS_TargetCape_016',
+  'COS_FestivalArmor_017','COS_MexicanSet_018','COS_TacticalVest_019','COS_MagicianHat_020',
+  'COS_RingOfPower_021','COS_AmuletSet_022','COS_MagnetArmor_023','COS_RibbonSet_024',
+];
+
+function makeImgUrl(id, w=400, h=400){
+  return `https://picsum.photos/id/${id}/${w}/${h}`;
+}
+
+function genAssets(){
+  const assets=[];
+  const statuses=['작업중','검토중','수정중','완료'];
+  const weights=[0.25,0.2,0.15,0.4];
+  const assignees=NAMES.slice(0,4);
+  const dates=['2025-06-15','2025-06-18','2025-06-20','2025-06-22','2025-06-25','2025-06-28','2025-07-01','2025-07-02','2025-07-03'];
+  function pickSt(){const r=Math.random();let s=0;for(let i=0;i<statuses.length;i++){s+=weights[i];if(r<s)return statuses[i];}return '완료';}
+
+  MONSTER_NAMES.forEach((name,i)=>{
+    const isNew=i>=20;
+    assets.push({
+      id:'M'+String(i+1).padStart(3,'0'),cat:'monster',name,
+      status:isNew?'작업중':pickSt(),
+      assignee:assignees[i%assignees.length],
+      rmId:i+1,
+      date:dates[i%dates.length],
+      imgId:MONSTER_IMG_IDS[i],
+      isNew,
+      desc:`${name} 에셋. 게임 내 보스/몬스터 등장 씬에 사용. 고해상도 스프라이트 및 애니메이션 프레임 포함. Google Drive NOVA/Monsters/ 폴더에서 관리.`,
+    });
+  });
+  COSTUME_NAMES.forEach((name,i)=>{
+    const isNew=i>=20;
+    assets.push({
+      id:'C'+String(i+1).padStart(3,'0'),cat:'costume',name,
+      status:isNew?'작업중':pickSt(),
+      assignee:assignees[i%assignees.length],
+      rmId:i+25,
+      date:dates[i%dates.length],
+      imgId:COSTUME_IMG_IDS[i],
+      isNew,
+      desc:`${name} 에셋. 캐릭터 커스터마이징 및 NPC 복장에 사용. 다양한 색상 변형 버전 포함. Google Drive NOVA/Costumes/ 폴더에서 관리.`,
+    });
+  });
+  return assets;
+}
+
+const ASSETS=genAssets();
+let curCat='monster',curFilter='all',curDetail=null;
+
+function avc(n){const i=NAMES.indexOf(n);return AVC[i>=0?i%AVC.length:0];}
+function ini(n){return n.charAt(0);}
+function avEl(n,sz=20){const c=avc(n);return `<div class="av" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz*.45)}px;background:${c}20;color:${c}">${ini(n)}</div>`;}
+
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2500);}
+
+function setCat(cat,el){
+  curCat=cat;
+  document.querySelectorAll('.ctab').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  setFilter('all',document.getElementById('fs-all'));
+}
+
+function setFilter(f,el){
+  curFilter=f;
+  ['fs-all','fs-작업중','fs-검토중','fs-수정중','fs-완료'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('on');});
+  if(el)el.classList.add('on');
+  renderGrid();
+}
+
+function renderGrid(){
+  const assignee=document.getElementById('assigneeSel').value;
+  document.getElementById('cnt-monster').textContent=ASSETS.filter(a=>a.cat==='monster').length;
+  document.getElementById('cnt-costume').textContent=ASSETS.filter(a=>a.cat==='costume').length;
+
+  const data=ASSETS.filter(a=>{
+    if(a.cat!==curCat)return false;
+    if(curFilter!=='all'&&a.status!==curFilter)return false;
+    if(assignee&&a.assignee!==assignee)return false;
+    return true;
+  });
+
+  const grid=document.getElementById('grid');
+  if(data.length===0){grid.innerHTML=`<div class="empty">해당하는 에셋이 없어요</div>`;return;}
+
+  grid.innerHTML=data.map(a=>`
+    <div class="card" onclick="openDetail('${a.id}')">
+      <div class="card-img-wrap">
+        <img src="${makeImgUrl(a.imgId)}" loading="lazy" alt="${a.name}" onerror="this.style.opacity='0';this.parentElement.style.background='var(--bg3)'">
+        <div class="card-img-overlay"></div>
+        ${a.isNew?`<span class="card-new-badge">NEW</span>`:''}
+      </div>
+      <div class="card-body">
+        <div class="card-name" title="${a.name}">${a.name}</div>
+        <div class="card-row">
+          <span class="badge s-${a.status}">${a.status}</span>
+          <span style="font-size:10px;color:var(--text3)">${a.date.slice(5).replace('-','/')}</span>
+        </div>
+        <div class="card-row" style="margin-top:4px">
+          <span class="card-assignee">${avEl(a.assignee,16)}<span>${a.assignee}</span></span>
+          <span style="font-size:10px;color:var(--blue);font-family:monospace">NOV-${String(a.rmId).padStart(3,'0')}</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="drive-link" onclick="event.stopPropagation();toast('Google Drive 연결 중...')">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M6.28 2.8L12 13.4l2.88-5L9.16 0H6.28zm6.44 10.6l2.88 5H22l-6.28-10.8-2.88 5H12.72zM2 18.6L4.88 24H19.12L22 18.6H2z"/></svg>
+          Drive
+        </span>
+        <span class="rm-link" onclick="event.stopPropagation();openRmDirect('${a.id}')">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M7 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 2h4v4M14 2L8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          NOV-${String(a.rmId).padStart(3,'0')}
+        </span>
+      </div>
+    </div>`).join('');
+}
+
+function openDetail(id){
+  const a=ASSETS.find(x=>x.id===id);if(!a)return;
+  curDetail=id;
+  const wrap=document.getElementById('d-img-wrap');
+  // 기존 img 제거 후 새로 생성
+  const existImg=wrap.querySelector('img');
+  if(existImg)existImg.remove();
+  const img=document.createElement('img');
+  img.src=makeImgUrl(a.imgId,800,450);
+  img.alt=a.name;
+  img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+  wrap.insertBefore(img,wrap.firstChild);
+  document.getElementById('d-img-label').textContent=a.name;
+  document.getElementById('d-name').textContent=a.name;
+  document.getElementById('d-st').innerHTML=`<span class="badge s-${a.status}">${a.status}</span>`;
+  document.getElementById('d-as').innerHTML=`${avEl(a.assignee,20)}<span>${a.assignee}</span>`;
+  document.getElementById('d-rm').innerHTML=`<span style="color:var(--blue);font-family:monospace;font-weight:600">NOV-${String(a.rmId).padStart(3,'0')}</span>`;
+  document.getElementById('d-date').textContent=a.date+' 업로드';
+  document.getElementById('d-cat').textContent=a.cat==='monster'?'몬스터':'복장';
+  document.getElementById('d-drive').innerHTML=`<span style="color:#34A853">NOVA/${a.cat==='monster'?'Monsters':'Costumes'}/</span>`;
+  document.getElementById('d-desc').textContent=a.desc;
+  document.getElementById('dbg').classList.add('open');
+}
+
+function dbgClose(e){if(e.target===document.getElementById('dbg'))closeDetail();}
+function closeDetail(){document.getElementById('dbg').classList.remove('open');curDetail=null;}
+
+function openRm(){if(curDetail)openRmDirect(curDetail);}
+function openRmDirect(id){
+  const a=ASSETS.find(x=>x.id===id);if(!a)return;
+  const num=String(a.rmId).padStart(3,'0');
+  document.getElementById('rm-url').textContent=`https://redmine.project-nova.com/issues/${a.rmId}`;
+  document.getElementById('rm-subnav').innerHTML=`Project NOVA &rsaquo; 이슈 &rsaquo; #${a.rmId}`;
+  document.getElementById('rm-meta').textContent=`이슈 #${a.rmId} · 에셋 작업 이슈`;
+  document.getElementById('rm-title').textContent=`[${a.cat==='monster'?'아트/몬스터':'아트/복장'}] ${a.name} 에셋 작업`;
+  const stC=STCOLOR[a.status]||'#888';
+  const stB=STBG[a.status]||'#F9F9F9';
+  document.getElementById('rm-attrs').innerHTML=`
+    <div class="rm-attr"><div class="rm-attr-l">상태</div><div class="rm-attr-v"><span class="rm-st-badge" style="background:${stB};color:${stC}">${a.status}</span></div></div>
+    <div class="rm-attr"><div class="rm-attr-l">우선순위</div><div class="rm-attr-v">Normal</div></div>
+    <div class="rm-attr"><div class="rm-attr-l">담당자</div><div class="rm-attr-v">${a.assignee}</div></div>
+    <div class="rm-attr"><div class="rm-attr-l">담당 파트</div><div class="rm-attr-v">아트</div></div>
+    <div class="rm-attr"><div class="rm-attr-l">카테고리</div><div class="rm-attr-v">${a.cat==='monster'?'몬스터':'복장'}</div></div>
+    <div class="rm-attr"><div class="rm-attr-l">Drive 경로</div><div class="rm-attr-v">NOVA/${a.cat==='monster'?'Monsters':'Costumes'}/</div></div>
+    <div class="rm-attr"><div class="rm-attr-l">업로드 일시</div><div class="rm-attr-v">${a.date}</div></div>
+    <div class="rm-attr"><div class="rm-attr-l">에셋 ID</div><div class="rm-attr-v" style="font-family:monospace">${a.id}</div></div>
+  `;
+  document.getElementById('rm-desc2').textContent=a.desc;
+  document.getElementById('rm-hist').innerHTML=`
+    <div class="rm-hist-item">
+      <div class="rm-hist-av" style="background:${avc(a.assignee)}">${ini(a.assignee)}</div>
+      <div class="rm-hist-body">
+        <div class="rm-hist-meta"><strong>${a.assignee}</strong> · ${a.date} 09:00</div>
+        <div class="rm-hist-txt">Google Drive에 에셋 업로드 완료. Redmine 이슈 자동 연동.</div>
+      </div>
+    </div>
+    ${a.status!=='작업중'?`
+    <div class="rm-hist-item">
+      <div class="rm-hist-av" style="background:${avc(a.assignee)}">${ini(a.assignee)}</div>
+      <div class="rm-hist-body">
+        <div class="rm-hist-meta"><strong>${a.assignee}</strong> · ${a.date} 14:30</div>
+        <div class="rm-hist-txt">에셋 상태 업데이트: ${a.status} · Redmine 자동 반영.</div>
+      </div>
+    </div>`:''}
+  `;
+  document.getElementById('rmBg').classList.add('open');
+}
+
+function rmBgClose(e){if(e.target===document.getElementById('rmBg'))closeRm();}
+function closeRm(){document.getElementById('rmBg').classList.remove('open');}
+
+renderGrid();
+</script>
+</body>
+</html>
